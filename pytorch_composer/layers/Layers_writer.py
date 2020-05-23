@@ -28,7 +28,7 @@ class Layers_writer():
         if layer.layer_type in self._layer_group_count:
             if layer.args in self._layer_group_count[layer.layer_type]:
                 return self._layer_group_count[layer.layer_type].index(
-                    layer.args), False
+                    layer.args) + 1, False
             else:
                 self._layer_group_count[layer.layer_type].append(layer.args)
                 return len(self._layer_group_count[layer.layer_type]), True
