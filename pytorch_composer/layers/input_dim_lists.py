@@ -3,5 +3,5 @@ channels_2d = [
     "maxpool2d"
 ]
 flat = [
-    "linear"
+    "flat"
 ]

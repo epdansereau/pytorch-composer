@@ -17,10 +17,14 @@ class Layers_writer():
         return self._layer_count, self._layer_group_count, layers_list, forward_function
 
     def _count_layers(self, layer):
+        """ Returns the index of a layer, based on how many times it has already appeared"""
         self._layer_count[layer.layer_type] += 1
         return self._layer_count[layer.layer_type]
 
     def _count_layers_group(self, layer):
+        """ Returns the index of a layer, based on how many times it has already appeared, but layers exactly the
+        same arguements use the same index.
+        Also returns if this layers as already appeared or not, as a boolean"""
         if layer.layer_type in self._layer_group_count:
             if layer.args in self._layer_group_count[layer.layer_type]:
                 return self._layer_group_count[layer.layer_type].index(
@@ -69,6 +73,10 @@ class Layers_writer():
 
     def linear(self, layers_list, forward_function, layer):
         return self._add_unique_layer(layers_list, forward_function, layer)
+
+    def flat(self, layers_list, forward_function, layer):
+        # Nothing to do here since the reshape happens earlier
+        return layers_list, forward_function
 
     def reshape(self, layers_list, forward_function, layer):
         forward_function.append(["comment", "Reshaping the data from {} to {}:".format(

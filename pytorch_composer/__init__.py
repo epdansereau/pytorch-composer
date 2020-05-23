@@ -8,6 +8,7 @@ import pytorch_composer.layers as layers
 
 class CodeSection():
     """ Holds the code ready to be printed """
+
     def __init__(self, code_text, input_dim, output_dim):
         self.code_text = code_text
         self.input_dim = input_dim
@@ -29,6 +30,7 @@ class CodeSection():
 
 class Layer():
     """ Holds values representing a single layer in the model"""
+
     def __init__(
             self,
             layer_type,
@@ -52,6 +54,7 @@ class Layer():
 
 class Block():
     """A group of several layers"""
+
     def __init__(
             self,
             count=Counter(),
@@ -76,7 +79,8 @@ def match_output_input(function, dimension):
     # reshaping to (batch_size, c, h, w)
     if function in layers.channels_2d:
         # These functions expect data of the shape (batch_size, channels, height, width). If the data received
-        # hasn't been resized and doesn't fit, we need to pick a reasonable shape.
+        # hasn't been resized and doesn't fit, we need to pick a reasonable
+        # shape.
         if len(dimension) == 4:
             return Layer("")
         else:
@@ -108,7 +112,7 @@ def match_output_input(function, dimension):
 
 
 def write_model(input_dim, sequence):
-    """ 
+    """
     Writes valid pytorch code for a model, given an arbitrary sequence and input dimensions.
     """
     data_dim = input_dim.copy()

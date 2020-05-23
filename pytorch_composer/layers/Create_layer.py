@@ -8,7 +8,7 @@ class Create_layer():
         entry = ["linear, 50]
         create = Create_layer()
         create["linear"]((1,32), entry)
-    This would return arguements for a linear layer of shape (1,50). 
+    This would return arguements for a linear layer of shape (1,50).
     '''
 
     def __getitem__(self, item):
@@ -197,6 +197,10 @@ class Create_layer():
         for arg, arg_value in args_.items():
             layer_args += ", {} = {}".format(arg, arg_value)
         return "linear", layer_args, input_dim, output_dim, "nn.Linear"
+
+    def flat(self, input_dim, layer):
+        # No transformation here (occurs during the reshaping step)
+        return "flat", None, input_dim, input_dim
 
     def relu(self, input_dim, layer):
         return "relu", None, input_dim, input_dim
