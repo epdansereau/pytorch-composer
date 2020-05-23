@@ -1,40 +1,6 @@
 import math
-import numpy as np
-from sympy import factorint
-from collections import Counter
 
-class CodeSection():
-    def __init__(self, code_text, input_dim, output_dim):
-        self.code_text = code_text
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        
-    def print_formated(self):
-        str_ = ""
-        for line in self.code_text:
-            if line[0] == "class":
-                str_ += "class " + "".join([str(x) for x in line[1:]]) + "\n"
-            elif line[0] == "def":
-                str_ += "\tdef " + "".join([str(x) for x in line[1:]]) + "\n"
-            elif line[0] == "comment":
-                str_ += "\t\t# " + "".join([str(x) for x in line[1:]]) + "\n"
-            else:
-                str_ += "\t\t" + "".join([str(x) for x in line[1:]]) + "\n"
-        print(str_)
-        
-class Layer():
-    def __init__(self, layer_type, layer_args = None, input_dim = None, output_dim = None, nn = None):
-        self.type = layer_type
-        self.args = layer_args
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.nn = nn
-    
-    def __bool__(self):
-        return bool(self.type)
-
-
-class Layers_output():
+class Create_layer():
     '''Subscritable class that returns functions to compute output dimensions'''
     def __getitem__(self, item):
         return getattr(self, item.lower())
@@ -147,7 +113,7 @@ class Layers_output():
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
             layer_args += ", {} = {}".format(arg, arg_value) 
-        return Layer("conv2d", layer_args, input_dim, output_dim, "nn.Conv2d")
+        return "conv2d", layer_args, input_dim, output_dim, "nn.Conv2d"
 
 
     def maxpool2d(self, input_dim, layer):
@@ -198,7 +164,7 @@ class Layers_output():
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
             layer_args += ", {} = {}".format(arg, arg_value) 
-        return Layer("maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d")
+        return "maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d"
 
     def linear(self, input_dim, layer):
         out_features, args_ = self._parse_entry(layer, "out_features", required = True)
@@ -207,156 +173,9 @@ class Layers_output():
         layer_args = "{}, {}".format(input_dim[-1], out_features)
         for arg, arg_value in args_.items():
             layer_args += ", {} = {}".format(arg, arg_value)
-        return Layer("linear", layer_args, input_dim, output_dim, "nn.Linear")
+        return "linear", layer_args, input_dim, output_dim, "nn.Linear"
     
     def relu(self, input_dim, layer):
-        return Layer("relu", None, input_dim, input_dim)
+        return "relu", None, input_dim, input_dim
     
-output = Layers_output()
-
-class Layers_writer():
-    '''Subscritable class that writes the code for each layer'''
-    def __init__(self):
-        self._layer_count = Counter()
-        self._layer_group_count = {}
-    
-    def __call__(self, layers_list, forward_function, layer):
-        return getattr(self, layer.type.lower())(layers_list, forward_function, layer)
-    
-    def _count_layers(self, layer):
-        self._layer_count[layer.type] += 1
-        return self._layer_count[layer.type]
-    
-    def _count_layers_group(self, layer):
-        if layer.type in self._layer_group_count:
-            if layer.args in self._layer_group_count[layer.type]:
-                return self._layer_group_count[layer.type].index(layer.args), False
-            else:
-                self._layer_group_count[layer.type].append(layer.args)
-                return len(self._layer_group_count[layer.type]), True
-        else:
-            self._layer_group_count[layer.type] = [layer.args]
-            return 1, True
-        
-    def _add_unique_layer(self, layers_list, forward_function, layer):
-        ind = self._count_layers(layer)
-        layers_list.append(["layer", "self.{}".format(layer.type), ind," = {}({})".format(layer.nn, layer.args)])
-        if layer.input_dim == layer.output_dim:
-            forward_function.append(["comment","Shape stays at {}".format(layer.input_dim)])
-        else:
-            forward_function.append(["comment","Shape goes from {} to {}".format(
-                layer.input_dim, layer.output_dim)])
-        forward_function.append(["forward","x = ", "self.{}{}".format(layer.type, ind),"(x)"])
-        return layers_list, forward_function
-    
-    def _add_reusable_layer(self, layers_list, forward_function, layer):
-        ind, new_group = self._count_layers_group(layer)
-        if new_group:
-            layers_list.append(["layer", "self.{}".format(layer.type), ind," = {}({})".format(layer.nn,layer.args)])
-        if layer.input_dim == layer.output_dim:
-            forward_function.append(["comment","Shape stays at {}".format(layer.input_dim)])
-        else:
-            forward_function.append(["comment","Shape goes from {} to {}".format(
-                layer.input_dim, layer.output_dim)])
-        forward_function.append(["forward","x = ", "self.{}{}".format(layer.type, ind),"(x)"])
-        return layers_list, forward_function
-    
-    def conv2d(self, layers_list, forward_function, layer):
-        return self._add_unique_layer(layers_list, forward_function, layer)
-        
-    def maxpool2d(self, layers_list, forward_function, layer):
-        return self._add_reusable_layer(layers_list, forward_function, layer)
-        
-    def linear(self, layers_list, forward_function, layer):
-        return self._add_unique_layer(layers_list, forward_function, layer)
-
-    def reshape(self, layers_list, forward_function, layer):
-        forward_function.append(["comment","Reshaping the data from {} to {}:".format(layer.input_dim,
-                                                                                     layer.output_dim)])
-        if layer.args == -1:
-            forward_function.append(["reshape","x = x.view(-1,{})".format(layer.output_dim[1])])
-        else:
-            forward_function.append(["reshape","x = x.view{}".format(tuple(layer.output_dim))])
-        return layers_list, forward_function
-    
-    def relu(self, layers_list, forward_function, layer):
-        forward_function.append(["reshape","x = F.relu(x)"])
-        return layers_list, forward_function
-
-def match_output_input(function, dimension):
-    '''
-    Reshapes the data if it's dimensions are incompatible with the next layer used.
-    Output: (reshape_code(str), new_dimensions(list))
-    '''
-    assert len(dimension) >= 2
-    channels_2d = [
-        "conv2d",
-        "maxpool2d"
-    ]
-    flat = [
-        "linear"
-    ]
-    
-    # reshaping to (batch_size, c, h, w)
-    if function in channels_2d:
-        # These functions expect data of the shape (batch_size, channels, height, width). If the data received
-        # hasn't been resized and doesn't fit, we need to pick a reasonable shape.
-        if len(dimension) == 4:
-            return Layer("")
-        else:
-            # distributing the factors between height and width
-            new_dim = [dimension[0],1,1,1]
-            factors_count = factorint(int(np.prod(dimension[1:])))
-            even = True
-            for factor, count in factors_count.items():
-                for _ in range(count):
-                    if even:
-                        new_dim[2] *= factor
-                        even = False
-                    else:
-                        new_dim[3] *= factor
-                        even = True 
-            return Layer("reshape", input_dim = dimension, output_dim = new_dim)
-        
-    # reshaping to (batch_size, x)
-    elif function in flat:
-        if len(dimension) == 2:
-            return Layer("")
-        features_dim = int(np.prod(dimension[1:]))
-        new_dim = [dimension[0], features_dim]
-        return Layer("reshape", -1, dimension, new_dim)
-    
-    # no reshaping
-    else:
-        return Layer("")     
-        
-        
-def write_model(input_dim, sequence):
-    data_dim = input_dim.copy()
-    write = Layers_writer()
-    
-    layers_list = []
-    forward_function = [["comment","Input dimensions : {}".format(data_dim)]]
-    
-    for entry in sequence:
-        layer_type = entry[0]
-        reshape_layer = match_output_input(layer_type, data_dim)
-        if reshape_layer:
-            data_dim = reshape_layer.output_dim
-            layers_list, forward_function = write(layers_list, forward_function, reshape_layer)
-            # to do: add reshape
-        layer = output[layer_type](data_dim, entry)
-        data_dim = layer.output_dim
-        layers_list, forward_function = write(layers_list, forward_function, layer)
-
-    code = [
-        ["class", "Net(nn.Module):"],
-        ["def","__init__(self):"],
-        ["code", "super(Net, self).__init__()"],
-        *layers_list,
-        ["def", "forward(self, x):"],
-        *forward_function,
-        ["code", "return x"]   
-    ]
-    
-    return CodeSection(code, input_dim, data_dim)
+create = Create_layer()
