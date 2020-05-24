@@ -16,10 +16,15 @@ class CodeSection():
 
     def formatted(self):
         str_ = ""
+        last = ""
         for line in self.code_text:
             if line[0] == "class":
-                str_ += "class " + "".join([str(x) for x in line[1:]]) + "\n"
+                if last:
+                    str_ += "\n"
+                str_ += "\nclass " + "".join([str(x) for x in line[1:]]) + "\n"
             elif line[0] == "def":
+                if last != "class":
+                    str_ += "\n"
                 str_ += " " * 4 + "def " + \
                     "".join([str(x) for x in line[1:]]) + "\n"
             elif line[0] == "comment":
@@ -27,6 +32,7 @@ class CodeSection():
                     "".join([str(x) for x in line[1:]]) + "\n"
             else:
                 str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
+            last = line[0]
         return str_
 
     def print_formatted(self):
@@ -103,7 +109,7 @@ def match_output_input(function, dimension):
                     else:
                         new_dim[3] *= factor
                         even = True
-            return Layer("reshape", input_dim=dimension, output_dim=new_dim)
+            return Layer("reshape", input_dim=dimension, output_dim=new_dim, description="Reshaping the data")
 
     # reshaping to (batch_size, x)
     elif function in layers.flat:
@@ -111,7 +117,7 @@ def match_output_input(function, dimension):
             return Layer("")
         features_dim = int(np.prod(dimension[1:]))
         new_dim = [dimension[0], features_dim]
-        return Layer("reshape", -1, dimension, new_dim)
+        return Layer("reshape", -1, dimension, new_dim, description="Flattening the data")
 
     # no reshaping
     else:

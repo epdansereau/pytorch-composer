@@ -127,12 +127,12 @@ class Create_layer():
         output_dim = [input_dim[0], c_out, h_out, w_out]
         # turning the kernel_size back from tuple to int for cleaner code:
         kernel_size = self._tuple_to_int(args_["kernel_size"])
-        layer_args = "{}, {}, kernel_size = {}".format(
+        layer_args = "{}, {}, kernel_size={}".format(
             input_dim[1], output_dim[1], kernel_size)
         if "kernel_size" in args_in:
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
-            layer_args += ", {} = {}".format(arg, arg_value)
+            layer_args += ", {}={}".format(arg, arg_value)
         return "conv2d", layer_args, input_dim, output_dim, "nn.Conv2d", "Convolution layer (2d)"
 
     def maxpool2d(self, input_dim, layer):
@@ -181,11 +181,11 @@ class Create_layer():
         if isinstance(kernel_size, tuple):
             if kernel_size[0] == kernel_size[0]:
                 kernel_size = kernel_size[0]
-        layer_args = "kernel_size = {}".format(kernel_size)
+        layer_args = "kernel_size={}".format(kernel_size)
         if "kernel_size" in args_in:
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
-            layer_args += ", {} = {}".format(arg, arg_value)
+            layer_args += ", {}={}".format(arg, arg_value)
         return "maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d", "Pooling layer (2d max)"
 
     def linear(self, input_dim, layer):
@@ -195,7 +195,7 @@ class Create_layer():
         output_dim[-1] = out_features
         layer_args = "{}, {}".format(input_dim[-1], out_features)
         for arg, arg_value in args_.items():
-            layer_args += ", {} = {}".format(arg, arg_value)
+            layer_args += ", {}={}".format(arg, arg_value)
         return "linear", layer_args, input_dim, output_dim, "nn.Linear", "Linear layer"
 
     def flat(self, input_dim, layer):
@@ -203,7 +203,7 @@ class Create_layer():
         return "flat", None, input_dim, input_dim, None, "Flatenning the data"
 
     def relu(self, input_dim, layer):
-        return "relu", None, input_dim, input_dim
+        return "relu", None, input_dim, input_dim, None, "Relu activation"
 
 
 create = Create_layer()
