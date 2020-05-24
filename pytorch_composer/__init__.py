@@ -14,18 +14,23 @@ class CodeSection():
         self.input_dim = input_dim
         self.output_dim = output_dim
 
-    def print_formated(self):
+    def formatted(self):
         str_ = ""
         for line in self.code_text:
             if line[0] == "class":
                 str_ += "class " + "".join([str(x) for x in line[1:]]) + "\n"
             elif line[0] == "def":
-                str_ += "\tdef " + "".join([str(x) for x in line[1:]]) + "\n"
+                str_ += " " * 4 + "def " + \
+                    "".join([str(x) for x in line[1:]]) + "\n"
             elif line[0] == "comment":
-                str_ += "\t\t# " + "".join([str(x) for x in line[1:]]) + "\n"
+                str_ += " " * 8 + "# " + \
+                    "".join([str(x) for x in line[1:]]) + "\n"
             else:
-                str_ += "\t\t" + "".join([str(x) for x in line[1:]]) + "\n"
-        print(str_)
+                str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
+        return str_
+
+    def print_formatted(self):
+        print(self.formatted())
 
 
 class Layer():
@@ -37,12 +42,14 @@ class Layer():
             layer_args=None,
             input_dim=None,
             output_dim=None,
-            nn=None):
+            nn=None,
+            description=None):
         self.layer_type = layer_type
         self.args = layer_args
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.nn = nn
+        self.description = description
 
     def __bool__(self):
         return bool(self.layer_type)
@@ -116,10 +123,7 @@ def write_model(input_dim, sequence):
     Writes valid pytorch code for a model, given an arbitrary sequence and input dimensions.
     """
     data_dim = input_dim.copy()
-
     block = Block()
-    block.forward_function = [
-        ["comment", "Input dimensions : {}".format(data_dim)]]
 
     for entry in sequence:
         layer_type = entry[0]
@@ -127,7 +131,6 @@ def write_model(input_dim, sequence):
         if reshape_layer:
             data_dim = reshape_layer.output_dim
             block = block.update(reshape_layer)
-            # to do: add reshape
         layer = Layer.create(layer_type, data_dim, entry)
         data_dim = layer.output_dim
         block = block.update(layer)
@@ -138,7 +141,9 @@ def write_model(input_dim, sequence):
         ["code", "super(Net, self).__init__()"],
         *block.layers_list,
         ["def", "forward(self, x):"],
+        ["comment", "Input dimensions : ", tuple(input_dim)],
         *block.forward_function,
+        ["comment", "Output dimensions : ", tuple(data_dim)],
         ["code", "return x"]
     ]
 

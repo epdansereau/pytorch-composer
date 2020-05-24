@@ -40,12 +40,11 @@ class Layers_writer():
         ind = self._count_layers(layer)
         layers_list.append(["layer", "self.{}".format(
             layer.layer_type), ind, " = {}({})".format(layer.nn, layer.args)])
-        if layer.input_dim == layer.output_dim:
-            forward_function.append(
-                ["comment", "Shape stays at {}".format(layer.input_dim)])
-        else:
-            forward_function.append(["comment", "Shape goes from {} to {}".format(
-                layer.input_dim, layer.output_dim)])
+        forward_function.append(["comment",
+                                 "{}: ".format(layer.description),
+                                 tuple(layer.input_dim),
+                                 " -> ",
+                                 tuple(layer.output_dim)])
         forward_function.append(
             ["forward", "x = ", "self.{}{}".format(layer.layer_type, ind), "(x)"])
         return layers_list, forward_function
@@ -55,12 +54,11 @@ class Layers_writer():
         if new_group:
             layers_list.append(["layer", "self.{}".format(
                 layer.layer_type), ind, " = {}({})".format(layer.nn, layer.args)])
-        if layer.input_dim == layer.output_dim:
-            forward_function.append(
-                ["comment", "Shape stays at {}".format(layer.input_dim)])
-        else:
-            forward_function.append(["comment", "Shape goes from {} to {}".format(
-                layer.input_dim, layer.output_dim)])
+        forward_function.append(["comment",
+                                 "Reshaping the data: ",
+                                 tuple(layer.input_dim),
+                                 " -> ",
+                                 tuple(layer.output_dim)])
         forward_function.append(
             ["forward", "x = ", "self.{}{}".format(layer.layer_type, ind), "(x)"])
         return layers_list, forward_function
@@ -79,8 +77,11 @@ class Layers_writer():
         return layers_list, forward_function
 
     def reshape(self, layers_list, forward_function, layer):
-        forward_function.append(["comment", "Reshaping the data from {} to {}:".format(
-            layer.input_dim, layer.output_dim)])
+        forward_function.append(["comment",
+                                 "{}: ".format(layer.description),
+                                 tuple(layer.input_dim),
+                                 " -> ",
+                                 tuple(layer.output_dim)])
         if layer.args == -1:
             forward_function.append(
                 ["reshape", "x = x.view(-1,{})".format(layer.output_dim[1])])

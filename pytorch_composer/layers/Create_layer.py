@@ -133,7 +133,7 @@ class Create_layer():
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
             layer_args += ", {} = {}".format(arg, arg_value)
-        return "conv2d", layer_args, input_dim, output_dim, "nn.Conv2d"
+        return "conv2d", layer_args, input_dim, output_dim, "nn.Conv2d", "Convolution layer (2d)"
 
     def maxpool2d(self, input_dim, layer):
 
@@ -186,7 +186,7 @@ class Create_layer():
             args_in.pop("kernel_size")
         for arg, arg_value in args_in.items():
             layer_args += ", {} = {}".format(arg, arg_value)
-        return "maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d"
+        return "maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d", "Pooling layer (2d max)"
 
     def linear(self, input_dim, layer):
         out_features, args_ = self._parse_entry(
@@ -196,11 +196,11 @@ class Create_layer():
         layer_args = "{}, {}".format(input_dim[-1], out_features)
         for arg, arg_value in args_.items():
             layer_args += ", {} = {}".format(arg, arg_value)
-        return "linear", layer_args, input_dim, output_dim, "nn.Linear"
+        return "linear", layer_args, input_dim, output_dim, "nn.Linear", "Linear layer"
 
     def flat(self, input_dim, layer):
         # No transformation here (occurs during the reshaping step)
-        return "flat", None, input_dim, input_dim
+        return "flat", None, input_dim, input_dim, None, "Flatenning the data"
 
     def relu(self, input_dim, layer):
         return "relu", None, input_dim, input_dim
