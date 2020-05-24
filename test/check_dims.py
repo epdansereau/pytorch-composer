@@ -1,5 +1,5 @@
 # Tests if the dimensions claimed by the comments of the generated code
-# are the same the real dimensions
+# are the same as the real dimensions
 
 import pytorch_composer
 import torch
