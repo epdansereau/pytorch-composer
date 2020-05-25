@@ -2,7 +2,7 @@
 # are the same as the real dimensions
 
 import pytorch_composer
-import torch
+import traceback
 
 input_dim = [5, 2, 32, 12]
 sequence = [
@@ -72,14 +72,30 @@ def add_dims_check(code):
             new_code.append(line)
     return new_code
 
+def number_lines(code):
+    with_number = ""
+    for n, line in enumerate (code.split("\n")):
+        with_number += str(n+1).zfill(4) + ":" + line + "\n"
+    return with_number
 
 def test(input_dim, sequence):
     ''' The accuracy should always be 100% '''
     model_code = pytorch_composer.write_model(input_dim, sequence)
+    print("Output:")
+    print(model_code.formatted())
+    print()
+    print("Dimension test:")
     model_code.code_text = add_dims_check(model_code.code_text)
     model_code = model_code.formatted()
     model_code = executable.format(model_code, tuple(input_dim))
-    exec(model_code, globals(), globals())
+    try:
+        exec(model_code, globals(), globals())
+    except Exception as error:
+        print()
+        print(number_lines(model_code))
+        print()
+        print("The test above failed to execute:")
+        traceback.print_exc()
     # passing test results from globals
     correct = 0
     for line in test_result:

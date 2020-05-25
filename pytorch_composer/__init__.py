@@ -3,6 +3,7 @@ import numpy as np
 from sympy import factorint
 
 import pytorch_composer.layers as layers
+from pytorch_composer.Layer import Layer
 from pytorch_composer.Block import Block
 
 
@@ -37,33 +38,6 @@ class CodeSection():
 
     def print_formatted(self):
         print(self.formatted())
-
-
-class Layer():
-    """ Holds values representing a single layer in the model"""
-
-    def __init__(
-            self,
-            layer_type,
-            layer_args=None,
-            input_dim=None,
-            output_dim=None,
-            nn=None,
-            description=None):
-        self.layer_type = layer_type
-        self.args = layer_args
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.nn = nn
-        self.description = description
-
-    def __bool__(self):
-        return bool(self.layer_type)
-
-    @staticmethod
-    def create(layer_type, data_dim, entry):
-        return Layer(*layers.create[layer_type](data_dim, entry))
-
 
 def match_output_input(function, dimension):
     """

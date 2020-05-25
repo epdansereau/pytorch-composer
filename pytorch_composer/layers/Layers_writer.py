@@ -2,6 +2,11 @@ class Layers_writer():
     '''
     Callable class that updates a Block object to add code from a new layer. Returns the updated Block object.
         
+    args:
+        block:
+            The Block object.
+        layer:
+            The layer to be added.
     '''
 
 

@@ -1,13 +1,13 @@
 import math
 
-
 class Create_layer():
     '''
     Subscriptable class that returns functions to compute output dimensions of a layer.
     For example:
-        entry = ["linear, 50]
         create = Create_layer()
-        create["linear"]((1,32), entry)
+        entry = ["linear, 50]
+        input_shape = (1,32)
+        create["linear"](input_shape, entry)
     This would return arguements for a linear layer of shape (1,50).
     '''
 
@@ -85,119 +85,118 @@ class Create_layer():
         missing_padding_0 = math.ceil(max(0, missing_padding_0) / 2)
         missing_padding_1 = math.ceil(max(0, missing_padding_1) / 2)
         return missing_padding_0, missing_padding_1
+    
 
+    def real_args(self, default, inp):
+        real = {}
+        for args in default:
+            if args in inp:
+                real[args] = inp[args]
+            else:
+                real[args] = default[args]
+        return real
+    
+    def args_out(self, default, real):
+        out = {}
+        for args in real:
+            if args in default:
+                if real[args] != default[args]:
+                    out[args] = real[args]
+            else:
+                out[args] = real[args]
+        return out
+    
+    def write_args(self, args, kwargs):
+        args_code = ("{}" + ", {}"*(len(args) - 1)).format(*args)
+        for arg, arg_value in kwargs.items():
+            args_code += ", {}={}".format(arg, arg_value)
+        return args_code
+    
     def conv2d(self, input_dim, layer):
-        ''' The c_out dimension (which is the second dimension) is changed by the convolutional layer
-        to the value of the out_channels arguement.
-        https://pytorch.org/docs/stable/nn.html#torch.nn.Conv2d
-        '''
-
-        c_out, args_in = self._parse_entry(
+        dimension_arg, other_args = self._parse_entry(
             layer, "out_channels", required=True)
-        args_ = args_in.copy()
-
-        # inserting default values into the arguements, and turning existing
-        # values to tuples
         default_args = {
-            "kernel_size": (3, 3),
-            "stride": (1, 1),
-            "padding": (0, 0),
-            "dilation": (1, 1)
+            "kernel_size": 3,
+            "stride": 1,
+            "padding": 0,
+            "dilation": 1
         }
-        for arg, val in default_args.items():
-            if not(arg in args_):
-                args_[arg] = val
-            args_[arg] = self._int_to_tuple(args_[arg])
-
-        # adding padding if the input dims are smaller than the kernel size
+        required_args = ["in_channels", "out_channels", "kernel_size"]
+        kw_args = ["stride", "padding", "dilation", "groups", "bias", "padding_mode"]
+        real = self.real_args(default_args, other_args)
+        real = {i:self._int_to_tuple(v) for i,v in real.items()}
         missing_padding_0, missing_padding_1 = self._missing_padding(
-            input_dim[2], input_dim[3], args_["kernel_size"], args_["padding"])
-        args_["padding"] = (
-            args_["padding"][0] +
+            input_dim[2], input_dim[3], real["kernel_size"], real["padding"])
+        real["padding"] = (
+            real["padding"][0] +
             missing_padding_0,
-            args_["padding"][1] +
+            real["padding"][1] +
             missing_padding_1)
-        args_in["padding"] = self._tuple_to_int(args_["padding"])
+        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], real["padding"], real[
+                              "dilation"], real["kernel_size"], real["stride"])
 
-        # calculating the output of width and height given the parameters
-
-        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], args_["padding"], args_[
-                                      "dilation"], args_["kernel_size"], args_["stride"])
-
-        output_dim = [input_dim[0], c_out, h_out, w_out]
-        # turning the kernel_size back from tuple to int for cleaner code:
-        kernel_size = self._tuple_to_int(args_["kernel_size"])
-        layer_args = "{}, {}, kernel_size={}".format(
-            input_dim[1], output_dim[1], kernel_size)
-        if "kernel_size" in args_in:
-            args_in.pop("kernel_size")
-        for arg, arg_value in args_in.items():
-            layer_args += ", {}={}".format(arg, arg_value)
+        output_dim = [input_dim[0], dimension_arg, h_out, w_out]
+        real = {i:self._tuple_to_int(v) for i,v in real.items()}
+        corrected_args = self.args_out(default_args, real)
+        required_args_out = [input_dim[1], output_dim[1], real["kernel_size"]]
+        for arg in required_args:
+            if arg in corrected_args:
+                corrected_args.pop(arg)
+        layer_args = self.write_args(required_args_out, corrected_args)
         return "conv2d", layer_args, input_dim, output_dim, "nn.Conv2d", "Convolution layer (2d)"
+        
 
     def maxpool2d(self, input_dim, layer):
-
-        kernel_size, args_in = self._parse_entry(layer, "kernel_size")
-        args_ = args_in.copy()
-        # if no kernel_size value is provided, it will default to 2
-        # inserting a kernel_size provided as int or tuple into the dict:
-        if kernel_size:
-            kernel_size = self._int_to_tuple(kernel_size)
-            args_["kernel_size"] = kernel_size
-
+        dimension_arg, other_args = self._parse_entry(layer, "kernel_size")
+        if not(dimension_arg):
+            dimension_arg = 2
         default_args = {
-            "kernel_size": (2, 2),
-            "padding": (0, 0),
-            "dilation": (1, 1)
+            "padding": 0,
+            "dilation": 1,
         }
-        for arg, val in default_args.items():
-            if not(arg in args_):
-                args_[arg] = val
-            args_[arg] = self._int_to_tuple(args_[arg])
-
-        # by default, the stride is the same size as the kernel size
-        if not("stride" in args_):
-            args_["stride"] = args_["kernel_size"]
-        args_["stride"] = self._int_to_tuple(args_["stride"])
-
-        # adding padding if the input dims are smaller than the kernel size
+        if not("stride" in other_args):
+            default_args["stride"] = dimension_arg
+        required_args = ["kernel_size"]
+        kw_args = ["stride","padding","dilation", "return_indices", "ceil_mode"]
+        real = self.real_args(default_args, other_args)
+        real = {i:self._int_to_tuple(v) for i,v in real.items()}
+        dimension_arg = self._int_to_tuple(dimension_arg)
         missing_padding_0, missing_padding_1 = self._missing_padding(
-            input_dim[2], input_dim[3], args_["kernel_size"], args_["padding"])
-        args_["padding"] = (
-            args_["padding"][0] +
+            input_dim[2], input_dim[3], dimension_arg, real["padding"])
+        real["padding"] = (
+            real["padding"][0] +
             missing_padding_0,
-            args_["padding"][1] +
+            real["padding"][1] +
             missing_padding_1)
-        args_in["padding"] = self._tuple_to_int(args_["padding"])
-
-        # computing output dims
-        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], args_["padding"], args_[
-                                      "dilation"], args_["kernel_size"], args_["stride"])
-
+        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], real["padding"], real[
+                              "dilation"], dimension_arg, real["stride"])
         output_dim = [input_dim[0], input_dim[1], h_out, w_out]
-        # turning the kernel_size back from tuple to int for cleaner code:
-        kernel_size = args_["kernel_size"]
-        args_.pop("kernel_size")
-        if isinstance(kernel_size, tuple):
-            if kernel_size[0] == kernel_size[0]:
-                kernel_size = kernel_size[0]
-        layer_args = "kernel_size={}".format(kernel_size)
-        if "kernel_size" in args_in:
-            args_in.pop("kernel_size")
-        for arg, arg_value in args_in.items():
-            layer_args += ", {}={}".format(arg, arg_value)
+        real = {i:self._tuple_to_int(v) for i,v in real.items()}
+        corrected_args = self.args_out(default_args, real)
+        required_args_out = [self._tuple_to_int(dimension_arg)]
+        for arg in required_args:
+            if arg in corrected_args:
+                corrected_args.pop(arg)
+        layer_args = self.write_args(required_args_out, corrected_args)
         return "maxpool2d", layer_args, input_dim, output_dim, "nn.MaxPool2d", "Pooling layer (2d max)"
 
     def linear(self, input_dim, layer):
-        out_features, args_ = self._parse_entry(
+        dimension_arg, other_args = self._parse_entry(
             layer, "out_features", required=True)
+        default_args = {}
+        required_args = ["in_features", "out_features"]
+        kw_args = ["bias"]
+        real = self.real_args(default_args, other_args)
+        corrected_args = self.args_out(default_args, real)
         output_dim = input_dim.copy()
-        output_dim[-1] = out_features
-        layer_args = "{}, {}".format(input_dim[-1], out_features)
-        for arg, arg_value in args_.items():
-            layer_args += ", {}={}".format(arg, arg_value)
+        output_dim[-1] = dimension_arg
+        for arg in required_args:
+            if arg in corrected_args:
+                corrected_args.pop(arg)
+        required_args_out = [input_dim[-1], dimension_arg]
+        layer_args = self.write_args(required_args_out, corrected_args)
         return "linear", layer_args, input_dim, output_dim, "nn.Linear", "Linear layer"
-
+    
     def flat(self, input_dim, layer):
         # No transformation here (occurs during the reshaping step)
         return "flat", None, input_dim, input_dim, None, "Flatenning the data"
