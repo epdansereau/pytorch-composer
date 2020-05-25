@@ -1,98 +1,83 @@
 from collections import Counter
+from pytorch_composer.Block import Block
 
 
 class Layers_writer():
-    '''Subscritable class that writes the code for each layer'''
+    '''
+    Callable class that updates a Block object to add code from a new layer. Returns the arguements for
+    the updated Block object.
+    Args:
+        block:
+            A Block object containing the code to be updated.
+        forward_function:
+            A list of lists of strings. Each list of strings represents a line of code.
+        
+    '''
 
-    def __init__(self):
-        self._layer_count = Counter()
-        self._layer_group_count = {}
 
     def __call__(self, block, layer):
-        self._layer_count = block.count
-        self._layer_group_count = block.group_count
-        layers_list, forward_function = getattr(
-            self, layer.layer_type.lower())(
-            block.layers_list, block.forward_function, layer)
-        return self._layer_count, self._layer_group_count, layers_list, forward_function
+        return getattr(self, layer.layer_type.lower())(block, layer)     
 
-    def _count_layers(self, layer):
-        """ Returns the index of a layer, based on how many times it has already appeared"""
-        self._layer_count[layer.layer_type] += 1
-        return self._layer_count[layer.layer_type]
-
-    def _count_layers_group(self, layer):
-        """ Returns the index of a layer, based on how many times it has already appeared, but layers exactly the
-        same arguements use the same index.
-        Also returns if this layers as already appeared or not, as a boolean"""
-        if layer.layer_type in self._layer_group_count:
-            if layer.args in self._layer_group_count[layer.layer_type]:
-                return self._layer_group_count[layer.layer_type].index(
-                    layer.args) + 1, False
-            else:
-                self._layer_group_count[layer.layer_type].append(layer.args)
-                return len(self._layer_group_count[layer.layer_type]), True
-        else:
-            self._layer_group_count[layer.layer_type] = [layer.args]
-            return 1, True
-
-    def _add_unique_layer(self, layers_list, forward_function, layer):
-        ind = self._count_layers(layer)
-        layers_list.append(["layer", "self.{}".format(
-            layer.layer_type), ind, " = {}({})".format(layer.nn, layer.args)])
-        forward_function.append(["comment",
+    def _add_unique_layer(self, block, layer):
+        block.count[layer.layer_type] += 1
+        ind = block.count[layer.layer_type]
+        block.add_layer(["layer", "self.{}".format(layer.layer_type), ind, " = {}({})".format(layer.nn, layer.args)])
+        block.add_forward(["comment",
                                  "{}: ".format(layer.description),
                                  tuple(layer.input_dim),
                                  " -> ",
                                  tuple(layer.output_dim)])
-        forward_function.append(
+        block.add_forward(
             ["forward", "x = ", "self.{}{}".format(layer.layer_type, ind), "(x)"])
-        return layers_list, forward_function
+        return block
 
-    def _add_reusable_layer(self, layers_list, forward_function, layer):
-        ind, new_group = self._count_layers_group(layer)
-        if new_group:
-            layers_list.append(["layer", "self.{}".format(
+    def _add_reusable_layer(self, block, layer):
+        is_new_group = not(layer.args in block.groups[layer.layer_type])
+        if is_new_group:
+            block.groups[layer.layer_type].append(layer.args)
+        ind = block.groups[layer.layer_type].index(layer.args) + 1
+        if is_new_group:
+            block.add_layer(["layer", "self.{}".format(
                 layer.layer_type), ind, " = {}({})".format(layer.nn, layer.args)])
-        forward_function.append(["comment",
+        block.add_forward(["comment",
                                  "Reshaping the data: ",
                                  tuple(layer.input_dim),
                                  " -> ",
                                  tuple(layer.output_dim)])
-        forward_function.append(
+        block.add_forward(
             ["forward", "x = ", "self.{}{}".format(layer.layer_type, ind), "(x)"])
-        return layers_list, forward_function
+        return block
 
-    def conv2d(self, layers_list, forward_function, layer):
-        return self._add_unique_layer(layers_list, forward_function, layer)
+    def conv2d(self, block, layer):
+        return self._add_unique_layer(block, layer)
 
-    def maxpool2d(self, layers_list, forward_function, layer):
-        return self._add_reusable_layer(layers_list, forward_function, layer)
+    def maxpool2d(self, block, layer):
+        return self._add_reusable_layer(block,layer)
 
-    def linear(self, layers_list, forward_function, layer):
-        return self._add_unique_layer(layers_list, forward_function, layer)
+    def linear(self, block, layer):
+        return self._add_unique_layer(block, layer)
 
-    def flat(self, layers_list, forward_function, layer):
+    def flat(self, block, layer):
         # Nothing to do here since the reshape happens earlier
-        return layers_list, forward_function
+        return block
 
-    def reshape(self, layers_list, forward_function, layer):
-        forward_function.append(["comment",
+    def reshape(self, block, layer):
+        block.add_forward(["comment",
                                  "{}: ".format(layer.description),
                                  tuple(layer.input_dim),
                                  " -> ",
                                  tuple(layer.output_dim)])
         if layer.args == -1:
-            forward_function.append(
+            block.add_forward(
                 ["reshape", "x = x.view(-1,{})".format(layer.output_dim[1])])
         else:
-            forward_function.append(
+            block.add_forward(
                 ["reshape", "x = x.view{}".format(tuple(layer.output_dim))])
-        return layers_list, forward_function
+        return block
 
-    def relu(self, layers_list, forward_function, layer):
-        forward_function.append(["reshape", "x = F.relu(x)"])
-        return layers_list, forward_function
+    def relu(self, block, layer):
+        block.add_forward(["reshape", "x = F.relu(x)"])
+        return block
 
 
 write = Layers_writer()

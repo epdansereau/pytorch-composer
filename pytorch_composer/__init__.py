@@ -1,9 +1,9 @@
 import math
 import numpy as np
 from sympy import factorint
-from collections import Counter
 
 import pytorch_composer.layers as layers
+from pytorch_composer.Block import Block
 
 
 class CodeSection():
@@ -63,24 +63,6 @@ class Layer():
     @staticmethod
     def create(layer_type, data_dim, entry):
         return Layer(*layers.create[layer_type](data_dim, entry))
-
-
-class Block():
-    """A group of several layers"""
-
-    def __init__(
-            self,
-            count=Counter(),
-            group_count={},
-            layers_list=[],
-            forward_function=[]):
-        self.count = count
-        self.group_count = group_count
-        self.layers_list = layers_list
-        self.forward_function = forward_function
-
-    def update(self, layer):
-        return Block(*layers.write(self, layer))
 
 
 def match_output_input(function, dimension):
