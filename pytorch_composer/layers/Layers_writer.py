@@ -1,16 +1,6 @@
-from collections import Counter
-from pytorch_composer.Block import Block
-
-
 class Layers_writer():
     '''
-    Callable class that updates a Block object to add code from a new layer. Returns the arguements for
-    the updated Block object.
-    Args:
-        block:
-            A Block object containing the code to be updated.
-        forward_function:
-            A list of lists of strings. Each list of strings represents a line of code.
+    Callable class that updates a Block object to add code from a new layer. Returns the updated Block object.
         
     '''
 
