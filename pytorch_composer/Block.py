@@ -1,5 +1,4 @@
 from collections import Counter, defaultdict
-import pytorch_composer.layers as layers
 
 class Block():
     """A group of several layers"""
@@ -16,7 +15,7 @@ class Block():
         self.forward_function = forward_function
 
     def update(self, layer):
-        return layers.write(self, layer)
+        return layer.update_block(self)
     
     def add_forward(self, line):
         self.forward_function.append(line)

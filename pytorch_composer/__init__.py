@@ -2,10 +2,19 @@ import math
 import numpy as np
 from sympy import factorint
 
-import pytorch_composer.layers as layers
-from pytorch_composer.Layer import Layer
-from pytorch_composer.Block import Block
+from .Layer import Layer
+from .Block import Block
 
+from .layers import Linear
+from .layers import Conv2d
+from .layers import MaxPool2d
+from .layers import Reshape
+from .layers import Flat
+from .layers import Relu
+
+# The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
+# Example: layers["Linear"] will return a linear layer object.
+layers = {x.__name__:x for x in Layer.__subclasses__()}
 
 class CodeSection():
     """ Holds the code ready to be printed """
@@ -38,15 +47,41 @@ class CodeSection():
 
     def print_formatted(self):
         print(self.formatted())
+        
+def parse_entry(entry):
+    '''
+    Parses [layer_type (str), (dimension_arg (int or tuple)), (other_args(dict))]
+    Valid input formats are : [str], [str, int or tuple], [str, dict], [str, int or tuple, dict]
+    '''
+    try:
+        assert type(entry[0]) == str
+        assert len(entry) <= 3
+        if entry[1:]:
+            assert type(entry[1]) in [int, tuple, dict]
+            if entry[2:]:
+                assert type(entry[1]) != dict and type(entry[2]) == dict
+    except:
+        raise TypeError("Invalid entry in list of entries.\n" + \
+                       "The expected format is [layer_type (str), (dimension_arg (int or tuple)), (other_args(dict))]") 
+    layer_type = entry[0]
+    dimension = None
+    other_args = {}
+    if len(entry) > 1:
+        if type(entry[1]) in [int, tuple]:
+            dimension = entry[1]
+        if type(entry[-1]) == dict:
+            other_args = entry[-1]
+    return layer_type, dimension, other_args   
 
-def match_output_input(function, dimension):
+        
+def match_output_input(valid_inputs, dimension):
     """
     Returns a layer that will reshape the data if it's dimensions are incompatible with the next input.
     If the data is already compatible, an empty layer that will be ignored is returned.
     """
     assert len(dimension) >= 2
     # reshaping to (batch_size, c, h, w)
-    if function in layers.channels_2d:
+    if valid_inputs == "channels_2d":
         # These functions expect data of the shape (batch_size, channels, height, width). If the data received
         # hasn't been resized and doesn't fit, we need to pick a reasonable
         # shape.
@@ -65,15 +100,15 @@ def match_output_input(function, dimension):
                     else:
                         new_dim[3] *= factor
                         even = True
-            return Layer("reshape", input_dim=dimension, output_dim=new_dim, description="Reshaping the data")
+            return layers["Reshape"]("reshape", input_dim=dimension, output_dim=new_dim, description="Reshaping the data")
 
     # reshaping to (batch_size, x)
-    elif function in layers.flat:
+    elif valid_inputs == "flat":
         if len(dimension) == 2:
             return Layer("")
         features_dim = int(np.prod(dimension[1:]))
         new_dim = [dimension[0], features_dim]
-        return Layer("reshape", -1, dimension, new_dim, description="Flattening the data")
+        return layers["Reshape"]("reshape", -1, dimension, new_dim, description="Flattening the data")
 
     # no reshaping
     else:
@@ -84,16 +119,16 @@ def write_model(input_dim, sequence):
     """
     Writes valid pytorch code for a model, given an arbitrary sequence and input dimensions.
     """
-    data_dim = input_dim.copy()
+    data_dim = input_dim.copy()  # to do: remove
     block = Block()
 
     for entry in sequence:
-        layer_type = entry[0]
-        reshape_layer = match_output_input(layer_type, data_dim)
+        layer_type, dimension_arg, other_args = parse_entry(entry)
+        reshape_layer = match_output_input(layers[layer_type].valid_input_dim, data_dim)
         if reshape_layer:
             data_dim = reshape_layer.output_dim
             block = block.update(reshape_layer)
-        layer = Layer.create(layer_type, data_dim, entry)
+        layer = layers[layer_type].create(data_dim, dimension_arg, other_args)
         data_dim = layer.output_dim
         block = block.update(layer)
 
