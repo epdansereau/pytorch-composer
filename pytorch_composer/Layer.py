@@ -1,4 +1,6 @@
 import math
+import warnings
+
 
 class Layer():
     """ Holds values representing a single layer in the model"""
@@ -20,7 +22,7 @@ class Layer():
 
     def __bool__(self):
         return bool(self.layer_type)
-        
+
     def _int_to_tuple(self, value):
         # if value is an int, returns it two times in a tuple
         if isinstance(value, int):
@@ -35,6 +37,16 @@ class Layer():
                 return value[0]
         return value
 
+    def ints_to_tuples(self, arguments, keys):
+        for key in keys:
+            arguments[key] = self._int_to_tuple(arguments[key])
+        return arguments
+
+    def tuples_to_ints(self, arguments, keys):
+        for key in keys:
+            arguments[key] = self._tuple_to_int(arguments[key])
+        return arguments
+
     def _conv_dim(self, h_in, w_in, padding, dilation, kernel_size, stride):
         h_out = math.floor((h_in + 2 * padding[0] - dilation[0] * (
             kernel_size[0] - 1) - 1) / stride[0] + 1)
@@ -48,9 +60,9 @@ class Layer():
         missing_padding_0 = math.ceil(max(0, missing_padding_0) / 2)
         missing_padding_1 = math.ceil(max(0, missing_padding_1) / 2)
         return missing_padding_0, missing_padding_1
-    
 
     def real_args(self, default, inp):
+        # TO DO change to active args
         real = {}
         for args in default:
             if args in inp:
@@ -58,34 +70,70 @@ class Layer():
             else:
                 real[args] = default[args]
         return real
-    
+
+    def active_args(self, dimension_arg, other_args):
+        args = {}
+        if dimension_arg is not None:
+            args[self.dimension_key] = dimension_arg
+            if self.dimension_key in other_args:
+                if other_args[self.dimension_key] != args[self.dimension_key]:
+                    warnings.warn(
+                        "In {} layer, the argument {} was defined twice. The value in" +
+                        " the argument dictionary will be ignored.".format(
+                            self.layer_type,
+                            self.dimension_key))
+                other_args.pop(self.dimension_key)
+            for arg in other_args:
+                if arg not in self.default_args:
+                    warnings.warn(
+                        "Unknown argument {} in {} layer will be ignored".format(
+                            self.dimension_key, self.layer_type))
+            for arg in self.default_args:
+                if arg in other_args:
+                    args[arg] = other_args[arg]
+                else:
+                    args[arg] = self.default_args[arg]
+        return args
+
     def args_out(self, default, real):
-        out = {}
+        corrected_args = {}
         for args in real:
             if args in default:
                 if real[args] != default[args]:
-                    out[args] = real[args]
+                    corrected_args[args] = real[args]
             else:
-                out[args] = real[args]
-        return out
-    
+                corrected_args[args] = real[args]
+        for arg in self.required_args:
+            if arg in corrected_args:
+                corrected_args.pop(arg)
+        return corrected_args
+
     def write_args(self, args, kwargs):
-        args_code = ("{}" + ", {}"*(len(args) - 1)).format(*args)
+        args_code = ("{}" + ", {}" * (len(args) - 1)).format(*args)
         for arg, arg_value in kwargs.items():
             args_code += ", {}={}".format(arg, arg_value)
         return args_code
 
-            
-            
+    def _write_args(self, args):
+        required = []
+        for required_arg in self.required_args:
+            required.append(args[required_arg])
+        args_code = ("{}" + ", {}" * (len(required) - 1)).format(*required)
+        for kw_arg in self.kw_args:
+            if args[kw_arg] != self.default_args[kw_arg]:
+                args_code += ", {}={}".format(kw_arg, args[kw_arg])
+        return args_code
+
     def _add_unique_layer(self, block):
         block.count[self.layer_type] += 1
         ind = block.count[self.layer_type]
-        block.add_layer(["layer", "self.{}".format(self.layer_type), ind, " = {}({})".format(self.nn, self.args)])
+        block.add_layer(["layer", "self.{}".format(
+            self.layer_type), ind, " = {}({})".format(self.nn, self.args)])
         block.add_forward(["comment",
-                                 "{}: ".format(self.description),
-                                 tuple(self.input_dim),
-                                 " -> ",
-                                 tuple(self.output_dim)])
+                           "{}: ".format(self.description),
+                           tuple(self.input_dim),
+                           " -> ",
+                           tuple(self.output_dim)])
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
         return block
@@ -99,11 +147,10 @@ class Layer():
             block.add_layer(["layer", "self.{}".format(
                 self.layer_type), ind, " = {}({})".format(self.nn, self.args)])
         block.add_forward(["comment",
-                                 "Reshaping the data: ",
-                                 tuple(self.input_dim),
-                                 " -> ",
-                                 tuple(self.output_dim)])
+                           "Reshaping the data: ",
+                           tuple(self.input_dim),
+                           " -> ",
+                           tuple(self.output_dim)])
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
         return block
-    

@@ -1,9 +1,10 @@
 from pytorch_composer.Layer import Layer
 import math
 
+
 class Conv2d(Layer):
     valid_input_dim = "channels_2d"
-    
+
     def __init__(self, input_dim):
         self.layer_type = "conv2d"
         self.args = None
@@ -11,41 +12,59 @@ class Conv2d(Layer):
         self.output_dim = None
         self.nn = "nn.Conv2d"
         self.description = "Convolution layer (2d)"
-        
+
         # Arguments:
         self.default_args = {
+            "in_channels": None,
+            "out_channels": 32,
             "kernel_size": 3,
             "stride": 1,
             "padding": 0,
-            "dilation": 1
+            "dilation": 1,
+            "groups": 1,
+            "bias": True,
+            "padding_mode": "zeros"
         }
+        self.dimension_key = "out_channels"
         self.required_args = ["in_channels", "out_channels", "kernel_size"]
-        self.kw_args = ["stride", "padding", "dilation", "groups", "bias", "padding_mode"]
-   
+        self.kw_args = [
+            "stride",
+            "padding",
+            "dilation",
+            "groups",
+            "bias",
+            "padding_mode"]
+
+    def get_valid_args(self, args, input_dim):
+        to_tuple = ["padding", "kernel_size"]
+        args = self.ints_to_tuples(args, to_tuple)
+        missing_padding_0, missing_padding_1 = self._missing_padding(
+            input_dim[2], input_dim[3], args["kernel_size"], args["padding"])
+        args["padding"] = (
+            args["padding"][0] +
+            missing_padding_0,
+            args["padding"][1] +
+            missing_padding_1)
+        args = self.tuples_to_ints(args, to_tuple)
+        return args
+
+    def get_output_dim(self, input_dim, args):
+        to_tuple = ["padding", "dilation", "kernel_size", "stride"]
+        args_ = self.ints_to_tuples(args.copy(), to_tuple)
+        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], args_["padding"], args_[
+            "dilation"], args_["kernel_size"], args_["stride"])
+        return [input_dim[0], args_["out_channels"], h_out, w_out]
+
     @classmethod
     def create(cls, input_dim, dimension_arg, other_args):
         layer = cls(input_dim)
-        real = layer.real_args(layer.default_args, other_args)
-        real = {i:layer._int_to_tuple(v) for i,v in real.items()}
-        missing_padding_0, missing_padding_1 = layer._missing_padding(
-            input_dim[2], input_dim[3], real["kernel_size"], real["padding"])
-        real["padding"] = (
-            real["padding"][0] +
-            missing_padding_0,
-            real["padding"][1] +
-            missing_padding_1)
-        h_out, w_out = layer._conv_dim(input_dim[2], input_dim[3], real["padding"], real[
-                              "dilation"], real["kernel_size"], real["stride"])
-
-        layer.output_dim = [input_dim[0], dimension_arg, h_out, w_out]
-        real = {i:layer._tuple_to_int(v) for i,v in real.items()}
-        corrected_args = layer.args_out(layer.default_args, real)
-        required_args_out = [input_dim[1], layer.output_dim[1], real["kernel_size"]]
-        for arg in layer.required_args:
-            if arg in corrected_args:
-                corrected_args.pop(arg)
-        layer.args = layer.write_args(required_args_out, corrected_args)
+        args = layer.active_args(dimension_arg, other_args)
+        args["in_channels"] = input_dim[1]
+        args["out_channels"] = dimension_arg
+        args = layer.get_valid_args(args, input_dim)
+        layer.output_dim = layer.get_output_dim(input_dim, args)
+        layer.args = layer._write_args(args)
         return layer
-    
+
     def update_block(self, block):
         return self._add_unique_layer(block)

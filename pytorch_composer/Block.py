@@ -1,5 +1,6 @@
 from collections import Counter, defaultdict
 
+
 class Block():
     """A group of several layers"""
 
@@ -16,10 +17,9 @@ class Block():
 
     def update(self, layer):
         return layer.update_block(self)
-    
+
     def add_forward(self, line):
         self.forward_function.append(line)
-        
+
     def add_layer(self, line):
         self.layers_list.append(line)
-        
