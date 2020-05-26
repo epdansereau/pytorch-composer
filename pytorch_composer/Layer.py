@@ -20,51 +20,6 @@ class Layer():
 
     def __bool__(self):
         return bool(self.layer_type)
-    
-    @staticmethod
-    def _parse_entry(entry, dimension_arg=None, required=False):
-        '''
-        Valid input formats are : [str], [str, int or tuple], [str, dict], [str, int or tuple, dict]
-        '''
-        assert isinstance(entry, list)
-        assert len(entry) <= 3
-        assert isinstance(entry[0], str)
-
-        if len(entry) == 1:
-            if required:
-                raise Exception(
-                    "No {} value was provided".format(dimension_arg))
-            return dimension_arg, {}
-
-        if len(entry) == 2:
-            if (isinstance(entry[1], int)) or (isinstance(entry[1], tuple)):
-                dimension_arg = entry[1]
-                return dimension_arg, {}
-            elif isinstance(entry[1], dict):
-                if dimension_arg in entry[1]:
-                    dimension_arg = entry[1][dimension_arg]
-                elif required:
-                    raise Exception(
-                        "No {} value was provided".format(dimension_arg))
-                return dimension_arg, entry[1]
-            else:
-                raise Exception(
-                    "Invalid type in entry (expected int or tuple or dict in the second position)")
-
-        if len(entry) == 3:
-            if (isinstance(entry[1], int)) or (isinstance(entry[1], tuple)):
-                dimension_arg = entry[1]
-            else:
-                raise Exception(
-                    "Invalid type in entry (expected int or tuple in the second position)")
-            if not isinstance(entry[2], dict):
-                raise Exception(
-                    "Invalid type in entry (expected dict in the third position)")
-            if dimension_arg in entry[2]:
-                if entry[2][dimension_arg] != entry[1]:
-                    raise Exception(
-                        "The {} value was defined two times".format(dimension_arg))
-            return entry[1], entry[2]
         
     def _int_to_tuple(self, value):
         # if value is an int, returns it two times in a tuple
