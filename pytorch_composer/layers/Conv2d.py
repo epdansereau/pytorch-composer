@@ -63,8 +63,8 @@ class Conv2d(Layer):
         args["out_channels"] = dimension_arg
         args = layer.get_valid_args(args, input_dim)
         layer.output_dim = layer.get_output_dim(input_dim, args)
-        layer.args = layer._write_args(args)
+        layer.args = layer.write_args(args)
         return layer
 
     def update_block(self, block):
-        return self._add_unique_layer(block)
+        return self.add_unique_layer(block)

@@ -28,8 +28,8 @@ class Linear(Layer):
         args['out_features'] = dimension_arg
         layer.output_dim = input_dim.copy()
         layer.output_dim[-1] = dimension_arg
-        layer.args = layer._write_args(args)
+        layer.args = layer.write_args(args)
         return layer
 
     def update_block(self, block):
-        return self._add_unique_layer(block)
+        return self.add_unique_layer(block)
