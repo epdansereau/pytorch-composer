@@ -85,19 +85,6 @@ class Layer():
                     args[arg] = self.default_args[arg]
         return args
 
-    def args_out(self, default, real):
-        corrected_args = {}
-        for args in real:
-            if args in default:
-                if real[args] != default[args]:
-                    corrected_args[args] = real[args]
-            else:
-                corrected_args[args] = real[args]
-        for arg in self.required_args:
-            if arg in corrected_args:
-                corrected_args.pop(arg)
-        return corrected_args
-
     def write_args(self, args):
         required = []
         for required_arg in self.required_args:
