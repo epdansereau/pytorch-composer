@@ -18,7 +18,7 @@ class Relu(Layer):
         self.kw_args = []
 
     @classmethod
-    def create(cls, input_dim, dimension_arg = None, other_args = {}):
+    def create(cls, input_dim, dimension_arg=None, other_args={}):
         return cls(input_dim)
 
     def update_block(self, block):

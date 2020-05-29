@@ -2,7 +2,8 @@ from collections import Counter, defaultdict
 
 
 class Block():
-    """A group of several layers"""
+    """ Holds two list of lists containing lines of codes, one for the forward function of the coded model, and
+    one the instantiation of the model. Also contains the count of how many times each type of layers appears."""
 
     def __init__(
             self,

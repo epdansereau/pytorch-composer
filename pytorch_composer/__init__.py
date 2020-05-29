@@ -16,7 +16,8 @@ from .layers import AdaptiveAvgPool2d
 from .layers import AdaptiveAvgPool3d
 
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
-# Example: layers["Linear"] will return a linear layer object.
+# Example:
+#    layers["Linear"] will return the Linear class.
 layers = {x.__name__: x for x in Layer.__subclasses__()}
 
 
@@ -29,6 +30,7 @@ class CodeSection():
         self.output_dim = output_dim
 
     def formatted(self):
+        "Converts the code saved as a list to a string with the proper indentation"
         str_ = ""
         last = ""
         for line in self.code_text:
@@ -57,6 +59,7 @@ def parse_entry(entry):
     '''
     Parses [layer_type (str), (dimension_arg (int or tuple)), (other_args(dict))]
     Valid input formats are : [str], [str, int or tuple], [str, dict], [str, int or tuple, dict]
+    Output: layer_type(str), dimension(int or tuple or None), other_args(dict or None)
     '''
     try:
         assert isinstance(entry[0], str)
@@ -85,8 +88,11 @@ def parse_entry(entry):
 def write_model(input_dim, sequence):
     """
     Writes valid pytorch code for a model, given an arbitrary sequence and input dimensions.
+    Input: input_dim(list or tuple), sequence(list of lists)
+    Output: CodeSection object
     """
-    data_dim = input_dim.copy()  # to do: remove
+    input_dim = list(input_dim)
+    data_dim = input_dim.copy()
     block = Block()
 
     for entry in sequence:

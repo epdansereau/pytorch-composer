@@ -33,10 +33,10 @@ class Conv2d(Layer):
             "groups",
             "bias",
             "padding_mode"]
-        
+
     @staticmethod
     def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims,4)
+        return Layer.change_rank(input_dims, 4)
 
     def get_valid_args(self, args, input_dim):
         to_tuple = ["padding", "kernel_size"]
@@ -59,7 +59,7 @@ class Conv2d(Layer):
         return [input_dim[0], args_["out_channels"], h_out, w_out]
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args = {}):
+    def create(cls, input_dim, dimension_arg, other_args={}):
         layer = cls(input_dim)
         args = layer.active_args(dimension_arg, other_args)
         args["in_channels"] = input_dim[1]

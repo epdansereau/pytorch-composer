@@ -18,12 +18,12 @@ class Flat(Layer):
         self.kw_args = []
 
     @classmethod
-    def create(cls, input_dim, dimension_arg = None, other_args = {}):
+    def create(cls, input_dim, dimension_arg=None, other_args={}):
         return cls(input_dim)
-   
+
     @staticmethod
     def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims,2)
+        return Layer.change_rank(input_dims, 2)
 
     def update_block(self, block):
         # Nothing to do here since the reshape happens earlier
