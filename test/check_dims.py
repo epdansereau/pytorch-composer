@@ -26,6 +26,10 @@ sequence = [
     ["Flat"],
     ["MaxPool2d", 2],
     ["Linear", 12],
+    ["AdaptiveAvgPool1d",122],
+    ["Linear", 53],
+    ["Conv2d", 65],
+    ["AdaptiveAvgPool2d",100],
 ]
 
 executable = '''

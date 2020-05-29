@@ -3,7 +3,6 @@ import math
 
 
 class Conv2d(Layer):
-    valid_input_dim = "channels_2d"
 
     def __init__(self, input_dim):
         self.layer_type = "conv2d"
@@ -34,6 +33,10 @@ class Conv2d(Layer):
             "groups",
             "bias",
             "padding_mode"]
+        
+    @staticmethod
+    def valid_input_dims(input_dims):
+        return Layer.change_rank(input_dims,4)
 
     def get_valid_args(self, args, input_dim):
         to_tuple = ["padding", "kernel_size"]

@@ -52,7 +52,6 @@ def resizing_args(inpu, oupu):
 
 
 def resize(x, oupu):
-    oupu = dimensions_inference(list(x.shape), oupu)
     args = resizing_args(list(x.shape), oupu)
     if len(args) == 3:
         if len(args[0]) == 3:
@@ -63,5 +62,5 @@ def resize(x, oupu):
             pool = nn.AdaptiveAvgPool3d(args[1])
         x = x.view(args[0])
         x = pool(x)
-    x = x.view(oupu)
-    return x
+    x = x.view(args[-1])
+    return x    

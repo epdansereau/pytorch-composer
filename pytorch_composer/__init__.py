@@ -11,6 +11,9 @@ from .layers import MaxPool2d
 from .layers import Reshape
 from .layers import Flat
 from .layers import Relu
+from .layers import AdaptiveAvgPool1d
+from .layers import AdaptiveAvgPool2d
+from .layers import AdaptiveAvgPool3d
 
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
 # Example: layers["Linear"] will return a linear layer object.
@@ -79,54 +82,6 @@ def parse_entry(entry):
     return layer_type, dimension, other_args
 
 
-def match_output_input(valid_inputs, dimension):
-    """
-    Returns a layer that will reshape the data if it's dimensions are incompatible with the next input.
-    If the data is already compatible, an empty layer that will be ignored is returned.
-    """
-    assert len(dimension) >= 2
-    # reshaping to (batch_size, c, h, w)
-    if valid_inputs == "channels_2d":
-        # These functions expect data of the shape (batch_size, channels, height, width). If the data received
-        # hasn't been resized and doesn't fit, we need to pick a reasonable
-        # shape.
-        # To do: This has to be moved to the reshape class, and be more
-        # flexible.
-        if len(dimension) == 4:
-            return Layer("")
-        else:
-            # distributing the factors between height and width
-            new_dim = [dimension[0], 1, 1, 1]
-            factors_count = factorint(int(np.prod(dimension[1:])))
-            even = True
-            for factor, count in factors_count.items():
-                for _ in range(count):
-                    if even:
-                        new_dim[2] *= factor
-                        even = False
-                    else:
-                        new_dim[3] *= factor
-                        even = True
-            return layers["Reshape"](
-                "reshape",
-                input_dim=dimension,
-                output_dim=new_dim,
-                description="Reshaping the data")
-
-    # reshaping to (batch_size, x)
-    elif valid_inputs == "flat":
-        if len(dimension) == 2:
-            return Layer("")
-        features_dim = int(np.prod(dimension[1:]))
-        new_dim = [dimension[0], features_dim]
-        return layers["Reshape"](
-            "reshape", -1, dimension, new_dim, description="Flattening the data")
-
-    # no reshaping
-    else:
-        return Layer("")
-
-
 def write_model(input_dim, sequence):
     """
     Writes valid pytorch code for a model, given an arbitrary sequence and input dimensions.
@@ -136,11 +91,11 @@ def write_model(input_dim, sequence):
 
     for entry in sequence:
         layer_type, dimension_arg, other_args = parse_entry(entry)
-        reshape_layer = match_output_input(
-            layers[layer_type].valid_input_dim, data_dim)
-        if reshape_layer:
-            data_dim = reshape_layer.output_dim
-            block = block.update(reshape_layer)
+        valid_input_dims = layers[layer_type].valid_input_dims(data_dim)
+        if valid_input_dims is not data_dim:
+            reshape = layers["Reshape"].create(data_dim, valid_input_dims)
+            data_dim = reshape.output_dim
+            block = block.update(reshape)
         layer = layers[layer_type].create(data_dim, dimension_arg, other_args)
         data_dim = layer.output_dim
         block = block.update(layer)

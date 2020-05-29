@@ -1,17 +1,41 @@
 from pytorch_composer.Layer import Layer
-
+from pytorch_composer.adaptive_resizing import resizing_args
+from pytorch_composer.layers.AdaptiveAvgPool1d import AdaptiveAvgPool1d
+from pytorch_composer.layers.AdaptiveAvgPool2d import AdaptiveAvgPool2d
+from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 
 class Reshape(Layer):
-    def update_block(self, block):
-        block.add_forward(["comment",
-                           "{}: ".format(self.description),
-                           tuple(self.input_dim),
-                           " -> ",
-                           tuple(self.output_dim)])
-        if self.args == -1:
-            block.add_forward(
-                ["reshape", "x = x.view(-1,{})".format(self.output_dim[1])])
+    
+    
+    def __init__(self, input_dim):
+        self.layer_type = "reshape"
+        self.input_dim = input_dim
+        self.output_dim = None
+        self.reshape_dim = None
+        self.pool = None
+        
+    @classmethod
+    def create(cls, input_dim, output_dim):
+        layer = cls(input_dim)
+        args = resizing_args(input_dim, output_dim)
+        if len(args) == 3:
+            layer.reshape_dim, pool_args, layer.output_dim = args
+            if len(layer.reshape_dim) == 3:
+                pool = AdaptiveAvgPool1d
+            if len(layer.reshape_dim) == 4:
+                pool = AdaptiveAvgPool2d
+            if len(layer.reshape_dim) == 5:
+                pool = AdaptiveAvgPool3d
+            layer.pool = pool.create(layer.reshape_dim, tuple(pool_args), {})
         else:
+            layer.output_dim = args[-1]
+        return layer
+        
+    def update_block(self, block):
+        if self.pool is not None:
             block.add_forward(
-                ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
+                ["reshape", "x = x.view{}".format(tuple(self.reshape_dim))])
+            block = self.pool.update_block(block)
+        block.add_forward(
+            ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
         return block

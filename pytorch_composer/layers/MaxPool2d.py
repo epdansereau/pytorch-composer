@@ -3,7 +3,6 @@ import math
 
 
 class MaxPool2d(Layer):
-    valid_input_dim = "channels_2d"
 
     def __init__(self, input_dim):
         self.layer_type = "maxpool2d"
@@ -61,6 +60,10 @@ class MaxPool2d(Layer):
         layer.output_dim = layer.get_output_dim(input_dim, args)
         layer.args = layer.write_args(args)
         return layer
+    
+    @staticmethod
+    def valid_input_dims(input_dims):
+        return Layer.change_rank(input_dims,4)
 
     def update_block(self, block):
         return self.add_reusable_layer(block)

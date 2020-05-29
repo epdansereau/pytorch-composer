@@ -2,7 +2,6 @@ from pytorch_composer.Layer import Layer
 
 
 class Flat(Layer):
-    valid_input_dim = "flat"
 
     def __init__(self, input_dim):
         self.layer_type = "flat"
@@ -21,6 +20,10 @@ class Flat(Layer):
     @classmethod
     def create(cls, input_dim, dimension_arg, other_args):
         return cls(input_dim)
+   
+    @staticmethod
+    def valid_input_dims(input_dims):
+        return Layer.change_rank(input_dims,2)
 
     def update_block(self, block):
         # Nothing to do here since the reshape happens earlier

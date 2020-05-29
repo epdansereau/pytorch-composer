@@ -20,46 +20,20 @@ class Layer():
         self.nn = nn
         self.description = description
 
-    def __bool__(self):
-        return bool(self.layer_type)
-
-    def _int_to_tuple(self, value):
-        # if value is an int, returns it two times in a tuple
-        if isinstance(value, int):
-            return (value, value)
-        else:
-            return value
-
-    def _tuple_to_int(self, value):
-        # collapses tuples into single ints when possible (expects len of 2)
-        if isinstance(value, tuple):
-            if value[0] == value[1]:
-                return value[0]
-        return value
-
-    def ints_to_tuples(self, arguments, keys):
-        for key in keys:
-            arguments[key] = self._int_to_tuple(arguments[key])
-        return arguments
-
-    def tuples_to_ints(self, arguments, keys):
-        for key in keys:
-            arguments[key] = self._tuple_to_int(arguments[key])
-        return arguments
-
-    def _conv_dim(self, h_in, w_in, padding, dilation, kernel_size, stride):
-        h_out = math.floor((h_in + 2 * padding[0] - dilation[0] * (
-            kernel_size[0] - 1) - 1) / stride[0] + 1)
-        w_out = math.floor((w_in + 2 * padding[1] - dilation[1] * (
-            kernel_size[1] - 1) - 1) / stride[1] + 1)
-        return h_out, w_out
-
-    def _missing_padding(self, height, width, kernel_size, padding):
-        missing_padding_0 = kernel_size[0] - (height + 2 * padding[0])
-        missing_padding_1 = kernel_size[1] - (width + 2 * padding[1])
-        missing_padding_0 = math.ceil(max(0, missing_padding_0) / 2)
-        missing_padding_1 = math.ceil(max(0, missing_padding_1) / 2)
-        return missing_padding_0, missing_padding_1
+    @staticmethod
+    def change_rank(input_dims, rank):
+        # Find valid input dimensions:
+        if len(input_dims) == rank:
+            return input_dims
+        if rank == 1:
+            return [-1]
+        if rank == 2:
+            return [input_dims[0], -1]
+        return [input_dims[0], 1] + [-1]*(rank - 2)
+   
+    @staticmethod
+    def valid_input_dims(input_dims):
+        return input_dims
 
     def active_args(self, dimension_arg, other_args):
         args = {}
@@ -84,6 +58,46 @@ class Layer():
                 else:
                     args[arg] = self.default_args[arg]
         return args
+    
+    def int_to_tuple(self, value):
+        # if value is an int, returns it two times in a tuple
+        if isinstance(value, int):
+            return (value, value)
+        else:
+            return value
+    
+    
+    # Find valid arguments:
+    def tuple_to_int(self, value):
+        # collapses tuples into single ints when possible (expects len of 2)
+        if isinstance(value, tuple):
+            if value[0] == value[1]:
+                return value[0]
+        return value
+
+    def ints_to_tuples(self, arguments, keys):
+        for key in keys:
+            arguments[key] = self.int_to_tuple(arguments[key])
+        return arguments
+
+    def tuples_to_ints(self, arguments, keys):
+        for key in keys:
+            arguments[key] = self.tuple_to_int(arguments[key])
+        return arguments
+
+    def _conv_dim(self, h_in, w_in, padding, dilation, kernel_size, stride):
+        h_out = math.floor((h_in + 2 * padding[0] - dilation[0] * (
+            kernel_size[0] - 1) - 1) / stride[0] + 1)
+        w_out = math.floor((w_in + 2 * padding[1] - dilation[1] * (
+            kernel_size[1] - 1) - 1) / stride[1] + 1)
+        return h_out, w_out
+
+    def _missing_padding(self, height, width, kernel_size, padding):
+        missing_padding_0 = kernel_size[0] - (height + 2 * padding[0])
+        missing_padding_1 = kernel_size[1] - (width + 2 * padding[1])
+        missing_padding_0 = math.ceil(max(0, missing_padding_0) / 2)
+        missing_padding_1 = math.ceil(max(0, missing_padding_1) / 2)
+        return missing_padding_0, missing_padding_1
 
     def write_args(self, args):
         required = []
@@ -118,10 +132,18 @@ class Layer():
             block.add_layer(["layer", "self.{}".format(
                 self.layer_type), ind, " = {}({})".format(self.nn, self.args)])
         block.add_forward(["comment",
-                           "Reshaping the data: ",
+                           "{}: ".format(self.description),
                            tuple(self.input_dim),
                            " -> ",
                            tuple(self.output_dim)])
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
         return block
+
+    def print_all(self):
+        print("self.layer_type:", self.layer_type)
+        print("self.args:", self.args)
+        print("self.input_dim:", self.input_dim)
+        print("self.output_dim:", self.output_dim)
+        print("self.nn:", self.nn)
+        print("self.description:", self.description)

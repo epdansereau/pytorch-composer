@@ -2,7 +2,6 @@ from pytorch_composer.Layer import Layer
 
 
 class Relu(Layer):
-    valid_input_dim = "any"
 
     def __init__(self, input_dim):
         self.layer_type = "relu"
