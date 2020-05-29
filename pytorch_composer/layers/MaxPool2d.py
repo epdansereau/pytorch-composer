@@ -53,7 +53,7 @@ class MaxPool2d(Layer):
         return [input_dim[0], input_dim[1], h_out, w_out]
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args):
+    def create(cls, input_dim, dimension_arg, other_args = {}):
         layer = cls(input_dim)
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args, input_dim)

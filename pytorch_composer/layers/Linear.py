@@ -20,7 +20,7 @@ class Linear(Layer):
         self.kw_args = ['bias']
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args):
+    def create(cls, input_dim, dimension_arg, other_args = {}):
         layer = cls(input_dim)
         args = layer.active_args(dimension_arg, other_args)
         args['in_features'] = input_dim[-1]

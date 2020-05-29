@@ -15,7 +15,7 @@ class Reshape(Layer):
         self.pool = None
         
     @classmethod
-    def create(cls, input_dim, output_dim):
+    def create(cls, input_dim, output_dim, other_args = {}):
         layer = cls(input_dim)
         args = resizing_args(input_dim, output_dim)
         if len(args) == 3:

@@ -59,7 +59,7 @@ class Conv2d(Layer):
         return [input_dim[0], args_["out_channels"], h_out, w_out]
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args):
+    def create(cls, input_dim, dimension_arg, other_args = {}):
         layer = cls(input_dim)
         args = layer.active_args(dimension_arg, other_args)
         args["in_channels"] = input_dim[1]
