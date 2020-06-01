@@ -48,7 +48,9 @@ print('Finished Training')
         super().__init__(self.template, settings, input_dim, output_dim, self.defaults)
         
     @classmethod
-    def from_model(cls, model, settings = {}):
+    def from_model(cls, model, settings = None):
+        if settings is None:
+            settings = {}
         if model.block.hidden_var:
             # Adding hidden variables
             var_list = ", ".join(model.block.hidden_var)

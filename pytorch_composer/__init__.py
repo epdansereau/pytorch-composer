@@ -58,14 +58,26 @@ class Block():
 
     def __init__(
             self,
-            count=Counter(),
-            groups=defaultdict(list),
-            layers_list=[],
-            forward_function=[],
+            count=None,
+            groups=None,
+            layers_list=None,
+            forward_function=None,
             input_dim = None,
             output_dim = None,
-            hidden_var=[],
-            hidden_dims = {}):
+            hidden_var=None,
+            hidden_dims = None):
+        if count is None:
+            count = Counter()
+        if groups is None:
+            groups = defaultdict(list)
+        if layers_list is None:
+            layers_list = []
+        if forward_function is None:
+            forward_function = []
+        if hidden_var is None:
+            hidden_var = []
+        if hidden_dims is None:
+            hidden_dims = {}
         self.count = count
         self.groups = groups
         self.layers_list = layers_list
@@ -74,15 +86,17 @@ class Block():
         self.output_dim = output_dim
         self.hidden_var = hidden_var
         self.hidden_dims = hidden_dims
+            
         
         # Recurrent layers
         self.recurrent = 0
         
-    def __str__(self):
+    @staticmethod
+    def write(code):
         "Converts the code saved as a list to a string with the proper indentation"
         str_ = ""
         last = ""
-        for line in self.code:
+        for line in code:
             if line[0] == "class":
                 if last:
                     str_ += "\n"
@@ -99,6 +113,9 @@ class Block():
                 str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
             last = line[0]
         return str_
+    
+    def __str__(self):
+        return self.write(self.code)
     
     @property
     def code(self):
@@ -134,7 +151,7 @@ class Block():
                 reshape = layers["Reshape"].create(block.output_dim, valid_input_dims)
                 block = block.update(reshape)
             layer = layers[layer_type].create(block.output_dim, dimension_arg, other_args)
-            block = block.update(layer)        
+            block = block.update(layer)
         return block
 
     def update(self, layer):
@@ -149,7 +166,10 @@ class Block():
         self.layers_list.append(line)
         
 class Model(CodeSection):
-    def __init__(self, sequence, input_dim, settings = {}):
+    def __init__(self, sequence, input_dim, settings = None):
+        if settings is None:
+            settings = {}
         self.block = Block.create(sequence, input_dim)
         self.defaults = {"model_name":"Net"}
         super().__init__(str(self.block), settings, input_dim, self.block.output_dim, self.defaults)
+

@@ -2,10 +2,12 @@
 # are the same as the real dimensions
 
 import pytorch_composer
+from pytorch_composer.CodeSection import CodeSection
+from pytorch_composer import Block
 import traceback
 
 input_dim = [5, 2, 32, 12]
-sequence = [
+sequence1 = [
     ["Conv2d", 6],
     ["MaxPool2d", 2],
     ["Linear", 52],
@@ -31,16 +33,32 @@ sequence = [
     ["Conv2d", 65],
     ["AdaptiveAvgPool2d",100],
 ]
+sequence2 = [
+    ["Conv2d", 6],
+    ["MaxPool2d", 2],
+    ["Linear", 52],
+    ["MaxPool2d", 2],
+    ["RNN",24],
+    ["MaxPool2d", 2],
+    ["Conv2d", 65],
+    ["MaxPool2d", 2],
+    ["Conv2d", 12],
+    ["RNN",24],
+    ["Relu"],
+]
 
 executable = '''
+import torch
 from torch import nn, rand
 import torch.nn.functional as F
 global test_result
+net = ""
 test_result = {{}}
 {}
 model = Net()
 data = rand{}
-model(data)
+{}
+model(data{})
 '''
 
 
@@ -84,19 +102,26 @@ def number_lines(code):
 
 def test(input_dim, sequence):
     ''' The accuracy should always be 100% '''
-    model_code = pytorch_composer.write_model(input_dim, sequence)
+    model = pytorch_composer.Model(sequence, input_dim)
     print("Output:")
-    print(model_code.formatted())
+    print(model)
     print()
     print("Dimension test:")
-    model_code.code_text = add_dims_check(model_code.code_text)
-    model_code = model_code.formatted()
-    model_code = executable.format(model_code, tuple(input_dim))
+    debug_code = add_dims_check(model.block.code)
+    debug_code = Block.write(debug_code)
+    debug_code = CodeSection(debug_code,model.defaults)
+    hidden_var1 = ""
+    hidden_var2 = ""
+    if model.block.hidden_var:
+        hidden_list = ", ".join(model.block.hidden_var)
+        hidden_var1 = f"{hidden_list} = model.initHidden()" 
+        hidden_var2 = ", " + hidden_list
+    debug_code = executable.format(debug_code, tuple(input_dim), hidden_var1, hidden_var2)
     try:
-        exec(model_code, globals(), globals())
+        exec(debug_code, globals(), globals())
     except Exception as error:
         print()
-        print(number_lines(model_code))
+        print(number_lines(debug_code))
         print()
         print("The test above failed to execute:")
         traceback.print_exc()
@@ -109,7 +134,16 @@ def test(input_dim, sequence):
         else:
             print(test_result[line], "Mismatch!")
     print()
-    print('accuracy:', f'{correct} / {len(test_result)}')
+    result = f'{correct} / {len(test_result)}'
+    print('accuracy:', result)
+    return result
+    
+print("TEST1")
+test1 = test(input_dim, sequence1)
+print()
+print("TEST2")
+test2 = test(input_dim, sequence2)
+print()     
+print("1:",test1)
+print("2:",test2)
 
-
-test(input_dim, sequence)

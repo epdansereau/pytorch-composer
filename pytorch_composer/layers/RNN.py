@@ -24,7 +24,9 @@ class RNN(Layer):
         self.kw_args = ['num_layers', 'bias', 'batch_first', 'dropout', 'bidirectional']
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args={}):
+    def create(cls, input_dim, dimension_arg, other_args=None):
+        if other_args is None:
+            other_args = {}
         layer = cls(input_dim)
         args = layer.active_args(dimension_arg, other_args)
         args['input_size'] = input_dim[-1]

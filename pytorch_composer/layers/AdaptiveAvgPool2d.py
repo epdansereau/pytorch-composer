@@ -19,7 +19,9 @@ class AdaptiveAvgPool2d(Layer):
         self.kw_args = []
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args = {}):
+    def create(cls, input_dim, dimension_arg, other_args = None):
+        if other_args is None:
+            other_args = {}
         layer = cls(input_dim)
         new_shape = layer.int_to_tuple(dimension_arg)
         out = input_dim.copy()

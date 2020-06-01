@@ -18,7 +18,9 @@ class AdaptiveAvgPool1d(Layer):
         self.kw_args = []
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args = {}):
+    def create(cls, input_dim, dimension_arg, other_args = None):
+        if other_args is None:
+            other_args = {}
         layer = cls(input_dim)
         if type(dimension_arg) == tuple:
             dimension_arg = dimension_arg[0]

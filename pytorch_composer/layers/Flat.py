@@ -18,7 +18,7 @@ class Flat(Layer):
         self.kw_args = []
 
     @classmethod
-    def create(cls, input_dim, dimension_arg=None, other_args={}):
+    def create(cls, input_dim, dimension_arg=None, other_args=None):
         return cls(input_dim)
 
     @staticmethod

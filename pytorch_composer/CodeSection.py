@@ -2,8 +2,10 @@ from string import Template, Formatter
 from collections import defaultdict
 
 class CodeSection(Template):
-    def __init__(self, template, settings, input_dim = None, output_dim = None, defaults = {}):
+    def __init__(self, template, settings, input_dim = None, output_dim = None, defaults = None):
         super().__init__(template)
+        if defaults is None:
+            defaults = {}
         self.defaults = defaults
         self.__dict__ = {**self.__dict__,**settings,**self.defaults}
         self.input_dim = input_dim
