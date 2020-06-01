@@ -96,7 +96,7 @@ class Layer():
         return args_code
 
     # Common ways the layer can be used to update the block:
-    def add_unique_layer(self, block):
+    def add_unique_layer(self, block, hidden = False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the
         # layer has weights).
         block.count[self.layer_type] += 1
@@ -108,8 +108,14 @@ class Layer():
                            tuple(self.input_dim),
                            " -> ",
                            tuple(self.output_dim)])
-        block.add_forward(
-            ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
+        if hidden:
+            block.add_forward(
+                ["forward", "x, h{} = ".format(ind),
+                 "self.{}{}".format(self.layer_type, ind),
+                 "(x, h{})".format(ind)])
+        else:
+            block.add_forward(
+                ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
         return block
 
     def add_reusable_layer(self, block):
