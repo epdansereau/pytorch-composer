@@ -36,6 +36,7 @@ class Layer():
         # Examples:
         #     input: [4,5,6,7],1     output: [-1]
         #     input: [4,5,6,7],2     output: [4,-1]
+        #     input: [4,5,6,7],3     output: [4,1,-1]
         #     input: [4,5,6,7],5     output: [4,1,-1,-1,-1]
         if len(input_dims) == rank:
             return input_dims
@@ -43,6 +44,7 @@ class Layer():
             return [-1]
         if rank == 2:
             return [input_dims[0], -1]
+        
         return [input_dims[0], 1] + [-1] * (rank - 2)
 
     @staticmethod

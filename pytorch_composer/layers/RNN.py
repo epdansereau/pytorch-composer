@@ -22,6 +22,8 @@ class RNN(Layer):
         self.dimension_key = 'hidden_size'
         self.required_args = ['input_size', 'hidden_size']
         self.kw_args = ['num_layers', 'bias', 'batch_first', 'dropout', 'bidirectional']
+        
+        self.hidden_dim = None
 
     @classmethod
     def create(cls, input_dim, dimension_arg, other_args=None):
@@ -33,14 +35,19 @@ class RNN(Layer):
         args['hidden_size'] = dimension_arg
         layer.output_dim = input_dim.copy()
         layer.output_dim[-1] = dimension_arg
+        if args["batch_first"]:
+            layer.hidden_dim = tuple([1, layer.output_dim[0], layer.output_dim[2]])
+        else:
+            layer.hidden_dim = tuple([1] + layer.output_dim[1:])
         layer.args = layer.write_args(args)
         return layer
     
     @staticmethod
     def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims, 3)
+        if len(input_dims) !=3:
+            return [4,-1,-1]
 
     def update_block(self, block):
         block.hidden_var.append("h" + str(len(block.hidden_var) + 1))
-        block.hidden_dims[block.hidden_var[-1]] = tuple([1] + self.output_dim[1:])
+        block.hidden_dims[block.hidden_var[-1]] = self.hidden_dim
         return self.add_unique_layer(block, hidden = True)

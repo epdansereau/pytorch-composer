@@ -166,10 +166,52 @@ class Block():
         self.layers_list.append(line)
         
 class Model(CodeSection):
-    def __init__(self, sequence, input_dim, settings = None):
+    def __init__(self, sequence, settings = None):
         if settings is None:
-            settings = {}
-        self.block = Block.create(sequence, input_dim)
+            settings = {"input_dim":[4,3,32,32]}
+        if isinstance(settings, CodeSection):
+            settings = settings.out
+        self.block = Block.create(sequence, settings["input_dim"])
         self.defaults = {"model_name":"Net"}
-        super().__init__(str(self.block), settings, input_dim, self.block.output_dim, self.defaults)
+        imports = set((
+            "torch",
+            "torch.nn as nn",
+            "torch.nn.functional as F"
+        ))
+        super().__init__(None, settings, self.defaults, imports)
 
+    @property
+    def template(self):
+        return str(self.block)    
+        
+    @property
+    def out(self):
+        if self.block.hidden_var:
+            settings = {"output_dim":self.block.output_dim}
+            # Adding hidden variables
+            var_list = ", ".join(self.block.hidden_var)
+            settings["hidden_variables"] = ", " + var_list
+            settings["hidden_init"] = " "*4 + f"{var_list} = net.initHidden()\n"
+            settings["hidden_copy"] = ""
+            for var in self.block.hidden_var:
+                settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"
+        return settings
+    
+class Code:
+    def __init__(self, code_sections):
+        self.sections = code_sections
+        
+    @property
+    def str_(self):
+        imports = set()
+        code = ""
+        for section in self.sections:
+            imports = imports.union(section.imports)
+            code += section.code
+        return CodeSection.write_imports(imports) +"\n" + code
+    
+    def __str__(self):
+        return self.str_
+    
+    def __repr__(self):
+        return self.str_

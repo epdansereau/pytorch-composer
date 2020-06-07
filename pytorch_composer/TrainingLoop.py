@@ -3,8 +3,10 @@ from collections import defaultdict
 
 
 class TrainingLoop(CodeSection):
-    def __init__(self, settings, input_dim = None, output_dim = None):
-        self.template = '''
+    def __init__(self, settings):
+        if isinstance(settings,CodeSection):
+            settings = settings.out
+        self._template = '''
 # Define a Loss function and optimizer
 net = Net()
 criterion = nn.${criterion}()
@@ -45,19 +47,11 @@ print('Finished Training')
             "momentum":0.9,
             "epoch":2,
         }
-        super().__init__(self.template, settings, input_dim, output_dim, self.defaults)
+        imports = set((
+            "torch",
+            "torch.optim as optim",
+            "torch.nn as nn",
+        ))
+        super().__init__(self.template, settings, self.defaults,imports)
         
-    @classmethod
-    def from_model(cls, model, settings = None):
-        if settings is None:
-            settings = {}
-        if model.block.hidden_var:
-            # Adding hidden variables
-            var_list = ", ".join(model.block.hidden_var)
-            settings["hidden_variables"] = ", " + var_list
-            settings["hidden_init"] = " "*4 + f"{var_list} = net.initHidden()\n"
-            settings["hidden_copy"] = ""
-            for var in model.block.hidden_var:
-                settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"
-        return cls(settings)
                 
