@@ -186,8 +186,8 @@ class Model(CodeSection):
         
     @property
     def out(self):
+        settings = {"output_dim":self.block.output_dim}
         if self.block.hidden_var:
-            settings = {"output_dim":self.block.output_dim}
             # Adding hidden variables
             var_list = ", ".join(self.block.hidden_var)
             settings["hidden_variables"] = ", " + var_list

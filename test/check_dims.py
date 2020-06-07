@@ -2,6 +2,7 @@
 # are the same as the real dimensions
 
 import pytorch_composer
+import pytorch_composer.datasets
 from pytorch_composer.CodeSection import CodeSection
 from pytorch_composer import Block
 import traceback
@@ -47,21 +48,6 @@ sequence2 = [
     ["Relu"],
 ]
 
-executable = '''
-import torch
-from torch import nn, rand
-import torch.nn.functional as F
-global test_result
-net = ""
-test_result = {{}}
-{}
-model = Net()
-data = rand{}
-{}
-model(data{})
-'''
-
-
 def add_dims_check(code):
     '''Adds a test after each comment about dimensions, and after the next forward function that changes
        the dimensions when there is one.
@@ -96,29 +82,30 @@ def add_dims_check(code):
 
 def number_lines(code):
     with_number = ""
-    for n, line in enumerate (code.split("\n")):
+    for n, line in enumerate (str(code).split("\n")):
         with_number += str(n+1).zfill(4) + ":" + line + "\n"
     return with_number
 
 def test(input_dim, sequence):
     ''' The accuracy should always be 100% '''
-    model = pytorch_composer.Model(sequence, input_dim)
+    dataset = pytorch_composer.datasets.CIFAR10()
+    model = pytorch_composer.Model(sequence, dataset)
+    loop = pytorch_composer.TrainingLoop(model)
+    loop.__dict__["debug1"] = "        if i == 1:\n            break"
     print("Output:")
     print(model)
     print()
     print("Dimension test:")
-    debug_code = add_dims_check(model.block.code)
-    debug_code = Block.write(debug_code)
-    debug_code = CodeSection(debug_code,model.defaults)
-    hidden_var1 = ""
-    hidden_var2 = ""
-    if model.block.hidden_var:
-        hidden_list = ", ".join(model.block.hidden_var)
-        hidden_var1 = f"{hidden_list} = model.initHidden()" 
-        hidden_var2 = ", " + hidden_list
-    debug_code = executable.format(debug_code, tuple(input_dim), hidden_var1, hidden_var2)
+    debug_model_code = Block.write(add_dims_check(model.block.code))
+    debug_model = CodeSection(debug_model_code,model.defaults, imports = model.imports)
+    debug_code = '''
+global test_result
+test_result = {}
+'''
+    debug_code = CodeSection(debug_code,{})
+    debug_code = pytorch_composer.Code([debug_code,dataset,debug_model,loop])
     try:
-        exec(debug_code, globals(), globals())
+        exec(str(debug_code),globals(),globals())
     except Exception as error:
         print()
         print(number_lines(debug_code))

@@ -36,6 +36,7 @@ ${hidden_copy}
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
+${debug1}        
         torch.save(net.state_dict(), 'model.pt')
 
 print('Finished Training')
