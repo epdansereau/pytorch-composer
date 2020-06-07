@@ -215,3 +215,8 @@ class Code:
     
     def __repr__(self):
         return self.str_
+    
+    def execute(self):
+        exec(str(self), globals(), globals())
+    
+    
