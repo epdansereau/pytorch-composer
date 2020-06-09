@@ -24,6 +24,8 @@ class RNN(Layer):
         self.kw_args = ['num_layers', 'bias', 'batch_first', 'dropout', 'bidirectional']
         
         self.hidden_dim = None
+        
+        self.batch_rank_ = 1
 
     @classmethod
     def create(cls, input_dim, dimension_arg, other_args=None):
@@ -39,6 +41,8 @@ class RNN(Layer):
             layer.hidden_dim = tuple([1, layer.output_dim[0], layer.output_dim[2]])
         else:
             layer.hidden_dim = tuple([1] + layer.output_dim[1:])
+        if args['batch_first']:
+            layer.batch_rank_ = 0
         layer.args = layer.write_args(args)
         return layer
     
@@ -46,6 +50,24 @@ class RNN(Layer):
     def valid_input_dims(input_dims):
         if len(input_dims) !=3:
             return [4,-1,-1]
+        
+    def batch_rank(self):
+        return self.batch_rank_
+
+    @staticmethod
+    def valid_permutation(data_dim, data_rank, args = None):
+        batch_rank = 1
+        if args:
+            if "batch_first" in args:
+                batch_rank = int(not(args["batch_first"]))
+            
+        if data_rank == batch_rank:
+            return False
+        else:
+            perm = [i for i in range(max(len(data_dim),batch_rank +1))]
+            perm = perm[:data_rank] + perm[data_rank+1:]
+            perm = perm[:batch_rank] + [data_rank]+ perm[batch_rank:]
+            return perm
 
     def update_block(self, block):
         block.hidden_var.append("h" + str(len(block.hidden_var) + 1))

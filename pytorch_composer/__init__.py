@@ -14,6 +14,7 @@ from .layers import AdaptiveAvgPool1d
 from .layers import AdaptiveAvgPool2d
 from .layers import AdaptiveAvgPool3d
 from .layers import RNN
+from .layers import permute
 
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
 # Example:
@@ -65,7 +66,9 @@ class Block():
             input_dim = None,
             output_dim = None,
             hidden_var=None,
-            hidden_dims = None):
+            hidden_dims = None,
+            batch_rank = 0
+            ):
         if count is None:
             count = Counter()
         if groups is None:
@@ -86,7 +89,7 @@ class Block():
         self.output_dim = output_dim
         self.hidden_var = hidden_var
         self.hidden_dims = hidden_dims
-            
+        self.batch_rank = batch_rank
         
         # Recurrent layers
         self.recurrent = 0
@@ -142,10 +145,15 @@ class Block():
         ]
     
     @classmethod
-    def create(cls, sequence, input_dim):
-        block = cls(input_dim = list(input_dim), output_dim = list(input_dim))
+    def create(cls, sequence, input_dim, batch_rank):
+        block = cls(input_dim = list(input_dim), output_dim = list(input_dim), batch_rank = batch_rank)
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
+            valid_permutation = layers[layer_type].valid_permutation(block.output_dim, block.batch_rank, other_args)
+            if valid_permutation:
+                permutation = layers["permute"].create(block.output_dim, valid_permutation)
+                block = block.update(permutation)
+                block.batch_rank = layer.batch_rank()
             valid_input_dims = layers[layer_type].valid_input_dims(block.output_dim)
             if valid_input_dims is not block.output_dim:
                 reshape = layers["Reshape"].create(block.output_dim, valid_input_dims)
@@ -168,11 +176,11 @@ class Block():
 class Model(CodeSection):
     def __init__(self, sequence, settings = None):
         if settings is None:
-            settings = {"input_dim":[4,3,32,32]}
+            settings = {"input_dim":[4,3,32,32],"batch_rank":0}
         if isinstance(settings, CodeSection):
             settings = settings.out
-        self.block = Block.create(sequence, settings["input_dim"])
-        self.defaults = {"model_name":"Net"}
+        self.block = Block.create(sequence, settings["input_dim"],settings["batch_rank"])
+        self.defaults = {"model_name":"Net","batch_rank":0}
         imports = set((
             "torch",
             "torch.nn as nn",
@@ -196,6 +204,11 @@ class Model(CodeSection):
             for var in self.block.hidden_var:
                 settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"
         return settings
+    
+    def set_output(self,output_dim):
+        if output_dim is not block.output_dim:
+            reshape = layers["Reshape"].create(self.block.output_dim, output_dim)
+            self.block = self.block.update(reshape)        
     
 class Code:
     def __init__(self, code_sections):

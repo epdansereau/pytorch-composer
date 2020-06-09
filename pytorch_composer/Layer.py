@@ -24,7 +24,22 @@ class Layer():
         self.output_dim = output_dim
         self.nn = nn
         self.description = description
+    
+    
+    @staticmethod
+    def batch_rank():
+        return 0
 
+    @classmethod
+    def valid_permutation(cls, data_dim, data_rank, args = None):
+        if data_rank == cls.batch_rank():
+            return False
+        else:
+            perm = [i for i in range(max(len(data_dim),cls.batch_rank() +1))]
+            perm = perm[:data_rank] + perm[data_rank+1:]
+            perm = perm[:cls.batch_rank()] + [data_rank]+ perm[cls.batch_rank():]
+            return perm
+        
     # Validating input dimensions:
     @staticmethod
     def change_rank(input_dims, rank):

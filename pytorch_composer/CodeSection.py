@@ -51,4 +51,5 @@ class CodeSection(Template):
     
     @property
     def out(self):
-        return {"input_dim":self.output_dim}
+        return {"input_dim":self.output_dim,
+               "batch_rank":0}
