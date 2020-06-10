@@ -31,4 +31,8 @@ classes = ('plane', 'car', 'bird', 'cat',
             "torchvision.transforms as transforms"
         ))
         super().__init__(self.template, settings, self.defaults,self.imports)
-        
+        self.variables = {
+            "x":[("x0",[4,3,32,32],0)],
+            "y":[("y0",[4,3,32,32],0)]
+        }
+

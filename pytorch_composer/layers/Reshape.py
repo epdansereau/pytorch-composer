@@ -7,18 +7,19 @@ from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 
 class Reshape(Layer):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "reshape"
         self.input_dim = input_dim
         self.output_dim = None
         self.reshape_dim = None
         self.pool = None
+        self.batch_rank = batch_rank
 
     @classmethod
-    def create(cls, input_dim, output_dim, other_args=None):
+    def create(cls, input_dim, output_dim, other_args, batch_rank):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim)
+        layer = cls(input_dim, batch_rank)
         args = resizing_args(input_dim, list(output_dim))
         if len(args) == 3:
             layer.reshape_dim, pool_args, layer.output_dim = args
@@ -28,7 +29,7 @@ class Reshape(Layer):
                 pool = AdaptiveAvgPool2d
             if len(layer.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            layer.pool = pool.create(layer.reshape_dim, tuple(pool_args), {})
+            layer.pool = pool.create(layer.reshape_dim, tuple(pool_args), None, 0)
         else:
             layer.output_dim = args[-1]
         return layer

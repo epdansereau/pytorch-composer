@@ -4,13 +4,14 @@ import math
 
 class Conv2d(Layer):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "conv2d"
         self.args = None
         self.input_dim = input_dim
         self.output_dim = None
         self.nn = "nn.Conv2d"
         self.description = "Convolution layer (2d)"
+        self.batch_rank = batch_rank
 
         # Arguments:
         self.default_args = {
@@ -33,10 +34,34 @@ class Conv2d(Layer):
             "groups",
             "bias",
             "padding_mode"]
-
+    
+    ## Main loop:
+    
+    # Valid permutation:    
+    
     @staticmethod
-    def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims, 4)
+    def required_batch_rank(data_dim, data_rank, args):
+        return 0  
+
+    # Valid input dimensions:
+    
+    @staticmethod
+    def valid_input_dims(input_dims, batch_rank):
+        return Layer.change_rank(input_dims, 4, batch_rank)
+    
+    #Creating the layer:
+    @classmethod
+    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
+        if other_args is None:
+            other_args = {}
+        layer = cls(input_dim, batch_rank)
+        args = layer.active_args(dimension_arg, other_args)
+        args["in_channels"] = input_dim[1]
+        args["out_channels"] = dimension_arg
+        args = layer.get_valid_args(args, input_dim)
+        layer.output_dim = layer.get_output_dim(input_dim, args)
+        layer.args = layer.write_args(args)
+        return layer    
 
     def get_valid_args(self, args, input_dim):
         to_tuple = ["padding", "kernel_size"]
@@ -58,18 +83,6 @@ class Conv2d(Layer):
             "dilation"], args_["kernel_size"], args_["stride"])
         return [input_dim[0], args_["out_channels"], h_out, w_out]
 
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args=None):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim)
-        args = layer.active_args(dimension_arg, other_args)
-        args["in_channels"] = input_dim[1]
-        args["out_channels"] = dimension_arg
-        args = layer.get_valid_args(args, input_dim)
-        layer.output_dim = layer.get_output_dim(input_dim, args)
-        layer.args = layer.write_args(args)
-        return layer
-
+    # Updating the block object:
     def update_block(self, block):
         return self.add_unique_layer(block)

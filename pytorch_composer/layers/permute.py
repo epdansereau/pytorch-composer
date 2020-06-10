@@ -3,18 +3,20 @@ import numpy as np
 
 class permute(Layer):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "permute"
         self.input_dim = input_dim
         self.reshape_dim = None
         self.output_dim = None
         self.permutation = None
+        self.batch_rank = batch_rank
         
     @classmethod
-    def create(cls, input_dim, permutation, other_args=None):
+    def create(cls, input_dim, permutation, other_args, batch_rank):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim)
+        new_batch_rank = permutation[batch_rank]
+        layer = cls(input_dim, new_batch_rank)
         layer.permutation = permutation
         # Finding
         if len(input_dim) > len(permutation):

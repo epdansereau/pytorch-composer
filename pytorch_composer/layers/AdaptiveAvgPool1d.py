@@ -2,13 +2,14 @@ from pytorch_composer.Layer import Layer
 
 
 class AdaptiveAvgPool1d(Layer):
-    def __init__(self, input_dim):
+    def __init__(self, input_dim,batch_rank):
         self.layer_type = "adaptiveavgpool1d"
         self.args = None
         self.input_dim = input_dim
         self.output_dim = None
         self.nn = "nn.AdaptiveAvgPool1d"
         self.description = "Resizing with adaptive average pooling"
+        self.batch_rank = batch_rank
 
         # Arguments:
         self.default_args = {
@@ -16,12 +17,16 @@ class AdaptiveAvgPool1d(Layer):
         self.dimension_key = 'output_size'
         self.required_args = ['output_size']
         self.kw_args = []
+        
+    @staticmethod
+    def required_batch_rank(data_dim, data_rank, args):
+        return 0        
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args = None):
+    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim)
+        layer = cls(input_dim, batch_rank)
         if type(dimension_arg) == tuple:
             dimension_arg = dimension_arg[0]
         out = input_dim.copy()
@@ -31,8 +36,8 @@ class AdaptiveAvgPool1d(Layer):
         return layer
 
     @staticmethod
-    def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims,3)
+    def valid_input_dims(input_dims, batch_rank):
+        return Layer.change_rank(input_dims,3, batch_rank)
 
     
     def update_block(self, block):

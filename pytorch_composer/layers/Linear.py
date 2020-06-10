@@ -3,13 +3,14 @@ from pytorch_composer.Layer import Layer
 
 class Linear(Layer):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "linear"
         self.args = None
         self.input_dim = input_dim
         self.output_dim = None
         self.nn = "nn.Linear"
         self.description = "Linear layer"
+        self.batch_rank = batch_rank
 
         # Arguments:
         self.default_args = {
@@ -20,10 +21,10 @@ class Linear(Layer):
         self.kw_args = ['bias']
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args=None):
+    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim)
+        layer = cls(input_dim, batch_rank)
         args = layer.active_args(dimension_arg, other_args)
         args['in_features'] = input_dim[-1]
         args['out_features'] = dimension_arg

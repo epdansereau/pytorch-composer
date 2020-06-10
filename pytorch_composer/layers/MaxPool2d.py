@@ -4,13 +4,14 @@ import math
 
 class MaxPool2d(Layer):
 
-    def __init__(self, input_dim):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "maxpool2d"
         self.args = None
         self.input_dim = input_dim
         self.output_dim = None
         self.nn = "nn.MaxPool2d"
         self.description = "Pooling layer (2d max)"
+        self.batch_rank = batch_rank
 
         # Arguments:
         self.default_args = {
@@ -29,6 +30,10 @@ class MaxPool2d(Layer):
             "dilation",
             "return_indices",
             "ceil_mode"]
+        
+    @staticmethod
+    def required_batch_rank(data_dim, data_rank, args):
+        return 0  
 
     def get_valid_args(self, args, input_dim):
         if args["stride"] is None:
@@ -53,10 +58,10 @@ class MaxPool2d(Layer):
         return [input_dim[0], input_dim[1], h_out, w_out]
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args=None):
+    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim)
+        layer = cls(input_dim, batch_rank)
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args, input_dim)
         layer.output_dim = layer.get_output_dim(input_dim, args)
@@ -64,8 +69,8 @@ class MaxPool2d(Layer):
         return layer
 
     @staticmethod
-    def valid_input_dims(input_dims):
-        return Layer.change_rank(input_dims, 4)
+    def valid_input_dims(input_dims, batch_rank):
+        return Layer.change_rank(input_dims, 4, batch_rank)
 
     def update_block(self, block):
         return self.add_reusable_layer(block)

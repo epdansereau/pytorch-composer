@@ -2,15 +2,16 @@ from string import Template, Formatter
 from collections import defaultdict
 
 class CodeSection(Template):
-    def __init__(self, template, settings, defaults = None, imports = None):
+    def __init__(self, template, settings, variables = None, imports = None):
         self._template = template
         if imports is None:
             self.imports = set()
         else:
             self.imports = set(imports)
-        if defaults is None:
-            defaults = {}
-        self.defaults = {"input_dim":None,"output_dim":None, **defaults}
+        if variables is None:
+            variables = {}
+        self.variables = variables
+        self.defaults = {"input_dim":None,"output_dim":None}
         self.__dict__ = {**self.defaults,**settings,**self.__dict__}
 
     @property
@@ -51,5 +52,9 @@ class CodeSection(Template):
     
     @property
     def out(self):
-        return {"input_dim":self.output_dim,
+        return {"x_dim":self.output_dim,
                "batch_rank":0}
+    
+    def fit(self,codeSection):
+        return codeSection
+        

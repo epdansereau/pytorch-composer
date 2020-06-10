@@ -46,6 +46,7 @@ sequence2 = [
     ["Conv2d", 12],
     ["RNN",24],
     ["Relu"],
+    ["Reshape",(4,10)]
 ]
 
 def add_dims_check(code):

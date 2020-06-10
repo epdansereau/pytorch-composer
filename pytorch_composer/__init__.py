@@ -22,7 +22,7 @@ from .layers import permute
 layers = {x.__name__: x for x in Layer.__subclasses__()}
 
 from pytorch_composer.CodeSection import CodeSection
-from .TrainingLoop import TrainingLoop
+from .Classifier import Classifier
 
 def parse_entry(entry):
     '''
@@ -54,8 +54,9 @@ def parse_entry(entry):
     return layer_type, dimension, other_args
 
 class Block():
-    """ Holds two list of lists containing lines of codes, one for the forward function of the coded model, and
-    one the instantiation of the model. Also contains the count of how many times each type of layers appears."""
+    """
+    Object that parses a sequence, creates and holds the code of the model as a list. 
+    """
 
     def __init__(
             self,
@@ -65,8 +66,7 @@ class Block():
             forward_function=None,
             input_dim = None,
             output_dim = None,
-            hidden_var=None,
-            hidden_dims = None,
+            hidden=None,
             batch_rank = 0
             ):
         if count is None:
@@ -77,22 +77,82 @@ class Block():
             layers_list = []
         if forward_function is None:
             forward_function = []
-        if hidden_var is None:
-            hidden_var = []
-        if hidden_dims is None:
-            hidden_dims = {}
+        if hidden is None:
+            hidden = []
+        
         self.count = count
         self.groups = groups
         self.layers_list = layers_list
         self.forward_function = forward_function
+        
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.hidden_var = hidden_var
-        self.hidden_dims = hidden_dims
+        self.hidden = hidden
         self.batch_rank = batch_rank
         
         # Recurrent layers
         self.recurrent = 0
+           
+    @property
+    def code(self):
+        ''' Code of the model in a list of lists'''
+        vars_ = "x"
+        hidden_init = []
+        if self.hidden:
+            vars_hidden = ", ".join([x[0] for x in self.hidden])
+            vars_ += ", " + vars_hidden
+            # Hidden init:
+            hidden_init = [["def", "initHidden(self):"]]
+            for var in self.hidden:
+                hidden_init.append(["code","{} = torch.zeros{}".format(var[0], var[1])])
+            hidden_init.append(["code","return " + vars_hidden])
+                
+        return [
+            ["class", "${model_name}(nn.Module):"],
+            ["def", "__init__(self):"],
+            ["code", "super(${model_name}, self).__init__()"],
+            *self.layers_list,
+            ["def", "forward(self, " + vars_ +"):"],
+            ["comment", "Input dimensions : ", tuple(self.input_dim)],
+            *self.forward_function,
+            ["comment", "Output dimensions : ", tuple(self.output_dim)],
+            ["code", "return " + vars_],
+            *hidden_init
+        ]
+        
+    def __str__(self):
+        return self.write(self.code)
+    
+    @classmethod
+    def create(cls, sequence, input_dim, batch_rank):
+        ''' The sequence provided is parsed and turned into a block object'''
+        block = cls(input_dim = list(input_dim), output_dim = list(input_dim), batch_rank = batch_rank)
+        for entry in sequence:
+            layer_type, dimension_arg, other_args = parse_entry(entry)
+            # Make the input dims fit with the  requested layer:
+            permutation = layers[layer_type].permutation(block.output_dim, block.batch_rank, other_args)
+            if permutation:
+                block = block.update("permute", permutation)
+            valid_input_dims = layers[layer_type].valid_input_dims(block.output_dim, block.batch_rank)
+            if valid_input_dims is not block.output_dim:
+                block = block.update("Reshape", valid_input_dims)
+            # Add code for the requested sequence
+            block = block.update(layer_type, dimension_arg, other_args)
+        return block
+
+    def update(self, layer_type, dimension_arg = None, other_args = None):
+        layer = layers[layer_type].create(self.output_dim, dimension_arg, other_args, self.batch_rank)
+        block = layer.update_block(self)
+        block.output_dim = layer.output_dim
+        block.batch_rank = layer.batch_rank
+
+        return block
+
+    def add_forward(self, line):
+        self.forward_function.append(line)
+
+    def add_layer(self, line):
+        self.layers_list.append(line)
         
     @staticmethod
     def write(code):
@@ -116,94 +176,32 @@ class Block():
                 str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
             last = line[0]
         return str_
-    
-    def __str__(self):
-        return self.write(self.code)
-    
-    @property
-    def code(self):
-        vars_ = "x"
-        hidden_init = []
-        if self.hidden_var:
-            vars_ += ", " + ", ".join(self.hidden_var)
-            hidden_init = [["def", "initHidden(self):"]]
-            for var in self.hidden_var:
-                hidden_init.append(["code","{} = torch.zeros{}".format(var, self.hidden_dims[var])])
-            hidden_init.append(["code","return " + ", ".join(self.hidden_var)])
-                
-        return [
-            ["class", "${model_name}(nn.Module):"],
-            ["def", "__init__(self):"],
-            ["code", "super(${model_name}, self).__init__()"],
-            *self.layers_list,
-            ["def", "forward(self, " + vars_ +"):"],
-            ["comment", "Input dimensions : ", tuple(self.input_dim)],
-            *self.forward_function,
-            ["comment", "Output dimensions : ", tuple(self.output_dim)],
-            ["code", "return " + vars_],
-            *hidden_init
-        ]
-    
-    @classmethod
-    def create(cls, sequence, input_dim, batch_rank):
-        block = cls(input_dim = list(input_dim), output_dim = list(input_dim), batch_rank = batch_rank)
-        for entry in sequence:
-            layer_type, dimension_arg, other_args = parse_entry(entry)
-            valid_permutation = layers[layer_type].valid_permutation(block.output_dim, block.batch_rank, other_args)
-            if valid_permutation:
-                permutation = layers["permute"].create(block.output_dim, valid_permutation)
-                block = block.update(permutation)
-                block.batch_rank = layer.batch_rank()
-            valid_input_dims = layers[layer_type].valid_input_dims(block.output_dim)
-            if valid_input_dims is not block.output_dim:
-                reshape = layers["Reshape"].create(block.output_dim, valid_input_dims)
-                block = block.update(reshape)
-            layer = layers[layer_type].create(block.output_dim, dimension_arg, other_args)
-            block = block.update(layer)
-        return block
-
-    def update(self, layer):
-        block = layer.update_block(self)
-        block.output_dim = layer.output_dim
-        return block
-
-    def add_forward(self, line):
-        self.forward_function.append(line)
-
-    def add_layer(self, line):
-        self.layers_list.append(line)
         
 class Model(CodeSection):
-    def __init__(self, sequence, settings = None):
-        if settings is None:
-            settings = {"input_dim":[4,3,32,32],"batch_rank":0}
-        if isinstance(settings, CodeSection):
-            settings = settings.out
-        self.block = Block.create(sequence, settings["input_dim"],settings["batch_rank"])
-        self.defaults = {"model_name":"Net","batch_rank":0}
+    ''' CodeSection object built from sequence'''
+    def __init__(self, sequence, data):
+        if data is None:
+            variables = {"x":[("x0",[4,3,32,32],0)]} # Default variable
+        elif isinstance(data, list):
+            variables = {"x":[("x0",data,0)]}        
+        elif isinstance(data, CodeSection):
+            variables = data.variables
+        else:
+            raise ValueError
+        self.block = Block.create(sequence, variables["x"][0][1],variables["x"][0][2])
+        variables["x"][0] = (variables["x"][0][0], self.block.output_dim, self.block.batch_rank)
+        variables["hidden"] = self.block.hidden
+        defaults = {"model_name":"Net","batch_rank":self.block.batch_rank}
         imports = set((
             "torch",
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        super().__init__(None, settings, self.defaults, imports)
+        super().__init__(None, defaults, variables, imports)
 
     @property
     def template(self):
         return str(self.block)    
-        
-    @property
-    def out(self):
-        settings = {"output_dim":self.block.output_dim}
-        if self.block.hidden_var:
-            # Adding hidden variables
-            var_list = ", ".join(self.block.hidden_var)
-            settings["hidden_variables"] = ", " + var_list
-            settings["hidden_init"] = " "*4 + f"{var_list} = net.initHidden()\n"
-            settings["hidden_copy"] = ""
-            for var in self.block.hidden_var:
-                settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"
-        return settings
     
     def set_output(self,output_dim):
         if output_dim is not block.output_dim:

@@ -2,10 +2,8 @@ from pytorch_composer.CodeSection import CodeSection
 from collections import defaultdict
 
 
-class TrainingLoop(CodeSection):
-    def __init__(self, settings):
-        if isinstance(settings,CodeSection):
-            settings = settings.out
+class Classifier(CodeSection):
+    def __init__(self, data):
         self._template = '''
 # Define a Loss function and optimizer
 net = Net()
@@ -41,18 +39,30 @@ ${debug1}
 
 print('Finished Training')
 '''
-        self.defaults = {
+    
+        settings = {
             "criterion":"CrossEntropyLoss",
             "optimizer":"SGD",
             "lr":0.001,
             "momentum":0.9,
             "epoch":2,
         }
+        
+        #adding hidden variables in training loop:
+        if "hidden" in data.variables:
+            hidden_vars = [x[0] for x in data.variables["hidden"]]
+            var_list = ", ".join(hidden_vars)
+            settings["hidden_variables"] = ", " + var_list
+            settings["hidden_init"] = " "*4 + f"{var_list} = net.initHidden()\n"
+            settings["hidden_copy"] = ""
+            for var in hidden_vars:
+                settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"        
+        
         imports = set((
             "torch",
             "torch.optim as optim",
             "torch.nn as nn",
         ))
-        super().__init__(self.template, settings, self.defaults,imports)
+        super().__init__(self.template, settings, data.variables ,imports)
         
                 

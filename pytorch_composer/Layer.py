@@ -10,39 +10,47 @@ class Layer():
 
     """
 
-    def __init__(
-            self,
-            layer_type,
-            layer_args=None,
-            input_dim=None,
-            output_dim=None,
-            nn=None,
-            description=None):
-        self.layer_type = layer_type
-        self.args = layer_args
+    def __init__(self, input_dim=None,batch_rank=None):
+        self.layer_type = None
+        self.batch_rank = batch_rank
+        self.args = None
         self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.nn = nn
-        self.description = description
+        self.output_dim = None
+        self.nn = None
+        self.description = None
+
     
+    ## Main loop:
+    
+    # Valid permutation:
     
     @staticmethod
-    def batch_rank():
-        return 0
+    def required_batch_rank(data_dim, data_rank, args):
+        return None
 
     @classmethod
-    def valid_permutation(cls, data_dim, data_rank, args = None):
-        if data_rank == cls.batch_rank():
+    def permutation(cls, data_dim, data_rank, args = None):
+        required = cls.required_batch_rank(data_dim, data_rank, args)
+        if required is None:
+            return False
+        if data_rank == required:
             return False
         else:
-            perm = [i for i in range(max(len(data_dim),cls.batch_rank() +1))]
+            perm = [i for i in range(max(len(data_dim),required +1))]
             perm = perm[:data_rank] + perm[data_rank+1:]
-            perm = perm[:cls.batch_rank()] + [data_rank]+ perm[cls.batch_rank():]
+            perm = perm[:required] + [data_rank]+ perm[required:]
             return perm
         
-    # Validating input dimensions:
+    # Valid input dimensions:
+    
     @staticmethod
-    def change_rank(input_dims, rank):
+    def valid_input_dims(input_dims, batch_rank):
+        # Takes in any input_dims(list of ints), and returns valid input dimensions(list of ints that can
+        # contain negative numbers for inference).
+        return input_dims
+    
+    @staticmethod
+    def change_rank(input_dims, new_rank, batch_rank):
         # Takes in any list and returns a list of the desired rank.
         # The dimension at index 0 is assumed to be the batch size and is not changed, unless the new rank
         # is one.
@@ -53,23 +61,31 @@ class Layer():
         #     input: [4,5,6,7],2     output: [4,-1]
         #     input: [4,5,6,7],3     output: [4,1,-1]
         #     input: [4,5,6,7],5     output: [4,1,-1,-1,-1]
-        if len(input_dims) == rank:
+        if len(input_dims) == new_rank:
             return input_dims
-        if rank == 1:
+        elif new_rank == 1:
             return [-1]
-        if rank == 2:
-            return [input_dims[0], -1]
-        
-        return [input_dims[0], 1] + [-1] * (rank - 2)
+        else:
+            # TD:if batch_rank > len(new_rank)
+            new_dims = [-1]*new_rank
+            new_dims[batch_rank] = input_dims[batch_rank]
+            if batch_rank == 0 and new_rank > 2:
+                new_dims[1] = 1
+            return new_dims
 
-    @staticmethod
-    def valid_input_dims(input_dims):
-        # Takes in any input_dims(list of ints), and returns valid input dimensions(list of ints that can
-        # contain negative numbers for inference). The default behavior is to
-        # be overruled by the type class.
-        return input_dims
 
-    # Receiving arguments.
+    #Creating the layer:
+    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
+        #TBD
+        if other_args is None:
+            other_args = {}
+        layer = cls(input_dim)
+        args = layer.active_args(dimension_arg, other_args)
+        args = layer.get_valid_args(args, input_dim)
+        layer.output_dim = layer.get_output_dim(input_dim, args)
+        layer.args = layer.write_args(args)
+        return layer    
+    
     def active_args(self, dimension_arg, other_args):
         # Joins the dimension_arg and other_args in the same dict.
         # Returns the arguments provided if there are any, or the default values otherwise.
@@ -98,7 +114,6 @@ class Layer():
                     args[arg] = self.default_args[arg]
         return args
 
-    # Writing the layer:
     def write_args(self, args):
         # Converts the layer's arguments into code.
         # Input: args(dict)
@@ -111,8 +126,13 @@ class Layer():
             if args[kw_arg] != self.default_args[kw_arg]:
                 args_code += ", {}={}".format(kw_arg, args[kw_arg])
         return args_code
+    
+    # Updating the block object:
 
-    # Common ways the layer can be used to update the block:
+    def update_block(self, block):
+        # The Block.update function creates a Layer object, and calls this function to update itself.
+        return block
+    
     def add_unique_layer(self, block, hidden = False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the
         # layer has weights).
@@ -153,6 +173,9 @@ class Layer():
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
         return block
+    
+    
+    ## Various utility functions used by layer classes:
 
     # Functions to compute valid arguments of 2d layers:
     def _conv_dim(self, h_in, w_in, padding, dilation, kernel_size, stride):
