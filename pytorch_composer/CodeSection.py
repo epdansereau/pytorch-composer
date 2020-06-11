@@ -55,6 +55,16 @@ class CodeSection(Template):
         return {"x_dim":self.output_dim,
                "batch_rank":0}
     
-    def fit(self,codeSection):
-        return codeSection
+    def set_output(self,output):
+        raise ValueError("An output of {} was requested, but the CodeSection's output is {} and can't be changed".format(
+                                                                                                 output,self.output_dim))
+        
+    def require_input(self, inputSection):
+        return False
+    
+    def fit(self, inputSection):
+        required_input = self.require_input(inputSection)
+        if required_input:
+            inputSection = inputSection.set_output(required_input)
+        return inputSection
         

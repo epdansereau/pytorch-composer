@@ -33,8 +33,6 @@ sequence1 = [
     ["Linear", 53],
     ["Conv2d", 65],
     ["AdaptiveAvgPool2d", 100],
-    ["Flat"],
-    ["Linear", 38],
 ]
 sequence2 = [
     ["Conv2d", 6],
@@ -48,7 +46,6 @@ sequence2 = [
     ["Conv2d", 12],
     ["RNN", 24],
     ["Relu"],
-    ["Reshape", (4, 10)]
 ]
 
 
@@ -102,7 +99,6 @@ def test(input_dim, sequence):
     print(model)
     print()
     print("Dimension test:")
-    model.block._code = add_dims_check(model.block.code)
     debug_code = '''
 global test_result
 test_result = {}
@@ -111,6 +107,8 @@ test_result = {}
 '''
     debug_code = CodeSection(debug_code, {})
     debug_code = pytorch_composer.Code([debug_code, dataset, model, loop])
+    # adding test code:
+    debug_code.sections[2].block.code = add_dims_check(debug_code.sections[2].block.code)
     try:
         exec(str(debug_code), globals(), globals())
     except Exception as error:

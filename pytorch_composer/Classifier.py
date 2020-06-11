@@ -67,3 +67,6 @@ print('Finished Training')
             "torch.nn as nn",
         ))
         super().__init__(self.template, settings, data.variables, imports)
+        
+    def require_input(self, input_ = None):
+        return self.variables["y"][0][1]

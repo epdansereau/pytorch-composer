@@ -85,7 +85,6 @@ class Block():
         self.groups = groups
         self.layers_list = layers_list
         self.forward_function = forward_function
-        self._code = None
 
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -94,6 +93,8 @@ class Block():
 
         # Recurrent layers
         self.recurrent = 0
+
+        self.code = None
 
     @property
     def parsed_code(self):
@@ -122,14 +123,6 @@ class Block():
             ["code", "return " + vars_],
             *hidden_init
         ]
-
-    @property
-    def code(self):
-        if self._code is None:
-            return self.parsed_code
-        else:
-            # Manually setting the code
-            return self._code
 
     def __str__(self):
         return self.write(self.code)
@@ -164,6 +157,8 @@ class Block():
             # Adding the requested layer:
 
             block = block.update(layer_type, dimension_arg, other_args)
+            
+        block.code = block.parsed_code
 
         return block
 
@@ -240,18 +235,23 @@ class Model(CodeSection):
         return str(self.block)
 
     def set_output(self, output_dim):
-        if output_dim is not block.output_dim:
-            reshape = layers["Reshape"].create(
-                self.block.output_dim, output_dim)
-            self.block = self.block.update(reshape)
+        if output_dim is not self.block.output_dim:
+            self.block = self.block.update("Reshape", output_dim)
+            self.block.code = self.block.parsed_code
+        return self
 
 
 class Code:
     def __init__(self, code_sections):
         self.sections = code_sections
-
+        # Starting from the end of the list, each section can request an output size 
+        # from the previous section. 
+        if len(self.sections) > 1:
+            for i in range(len(self.sections))[-1::-1]:
+                self.sections[i-1] = self.sections[i].fit(self.sections[i-1])
     @property
     def str_(self):
+        # Combining all code sections into a string:
         imports = set()
         code = ""
         for section in self.sections:
