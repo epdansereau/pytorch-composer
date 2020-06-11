@@ -18,18 +18,21 @@ class Flat(Layer):
         self.required_args = []
         self.kw_args = []
 
+    # Main loop:
+
+    # Valid permutation:
+
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
-        return 0  
-    
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        return cls(input_dim, batch_rank)
+        return 0
+
+    # Valid input dimensions:
 
     @staticmethod
     def valid_input_dims(input_dims, batch_rank):
         return Layer.change_rank(input_dims, 2, batch_rank)
 
-    def update_block(self, block):
-        # Nothing to do here since the reshape happens earlier
-        return block
+    # Creating the layer:
+
+    # Updating the block object:
+        # Nothing to do here since the reshape happens earlier in the loop.

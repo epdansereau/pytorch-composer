@@ -29,25 +29,28 @@ sequence1 = [
     ["Flat"],
     ["MaxPool2d", 2],
     ["Linear", 12],
-    ["AdaptiveAvgPool1d",122],
+    ["AdaptiveAvgPool1d", 122],
     ["Linear", 53],
     ["Conv2d", 65],
-    ["AdaptiveAvgPool2d",100],
+    ["AdaptiveAvgPool2d", 100],
+    ["Flat"],
+    ["Linear", 38],
 ]
 sequence2 = [
     ["Conv2d", 6],
     ["MaxPool2d", 2],
     ["Linear", 52],
     ["MaxPool2d", 2],
-    ["RNN",24],
+    ["RNN", 24],
     ["MaxPool2d", 2],
     ["Conv2d", 65],
     ["MaxPool2d", 2],
     ["Conv2d", 12],
-    ["RNN",24],
+    ["RNN", 24],
     ["Relu"],
-    ["Reshape",(4,10)]
+    ["Reshape", (4, 10)]
 ]
+
 
 def add_dims_check(code):
     '''Adds a test after each comment about dimensions, and after the next forward function that changes
@@ -81,32 +84,35 @@ def add_dims_check(code):
             new_code.append(line)
     return new_code
 
+
 def number_lines(code):
     with_number = ""
-    for n, line in enumerate (str(code).split("\n")):
-        with_number += str(n+1).zfill(4) + ":" + line + "\n"
+    for n, line in enumerate(str(code).split("\n")):
+        with_number += str(n + 1).zfill(4) + ":" + line + "\n"
     return with_number
+
 
 def test(input_dim, sequence):
     ''' The accuracy should always be 100% '''
     dataset = pytorch_composer.datasets.CIFAR10()
     model = pytorch_composer.Model(sequence, dataset)
-    loop = pytorch_composer.TrainingLoop(model)
+    loop = pytorch_composer.Classifier(model)
     loop.__dict__["debug1"] = "        if i == 1:\n            break"
     print("Output:")
     print(model)
     print()
     print("Dimension test:")
-    debug_model_code = Block.write(add_dims_check(model.block.code))
-    debug_model = CodeSection(debug_model_code,model.defaults, imports = model.imports)
+    model.block._code = add_dims_check(model.block.code)
     debug_code = '''
 global test_result
 test_result = {}
+
+
 '''
-    debug_code = CodeSection(debug_code,{})
-    debug_code = pytorch_composer.Code([debug_code,dataset,debug_model,loop])
+    debug_code = CodeSection(debug_code, {})
+    debug_code = pytorch_composer.Code([debug_code, dataset, model, loop])
     try:
-        exec(str(debug_code),globals(),globals())
+        exec(str(debug_code), globals(), globals())
     except Exception as error:
         print()
         print(number_lines(debug_code))
@@ -115,6 +121,7 @@ test_result = {}
         traceback.print_exc()
     # passing test results from globals
     correct = 0
+
     for line in test_result:
         if test_result[line][0] == test_result[line][1]:
             print(test_result[line])
@@ -125,13 +132,13 @@ test_result = {}
     result = f'{correct} / {len(test_result)}'
     print('accuracy:', result)
     return result
-    
+
+
 print("TEST1")
 test1 = test(input_dim, sequence1)
 print()
 print("TEST2")
 test2 = test(input_dim, sequence2)
-print()     
-print("1:",test1)
-print("2:",test2)
-
+print()
+print("1:", test1)
+print("2:", test2)

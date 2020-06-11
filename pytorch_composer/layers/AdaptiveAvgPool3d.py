@@ -19,27 +19,34 @@ class AdaptiveAvgPool3d(Layer):
         self.required_args = ['output_size']
         self.kw_args = []
 
+    # Main loop:
+
+    # Valid permutation:
+
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
-        return 0  
-        
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim, batch_rank)
-        new_shape = layer.int_to_tuple(dimension_arg)
-        out = input_dim.copy()
-        out[-3] = new_shape[0]
-        out[-2] = new_shape[1]
-        out[-1] = new_shape[2]
-        layer.output_dim = out
-        layer.args = layer.write_args({'output_size':dimension_arg})
-        return layer
+        return 0
+
+    # Valid input dimensions:
 
     @staticmethod
     def valid_input_dims(input_dims, batch_rank):
         return Layer.change_rank(input_dims, batch_rank)
+
+    # Creating the layer:
+
+    def get_valid_args(self, args):
+        args["output_size"] = self.int_to_tuple(args["output_size"])
+        return args
+
+    def get_output_dim(self, args):
+        out = self.input_dim.copy()
+        out[-3] = args["output_size"][0]
+        out[-2] = args["output_size"][1]
+        out[-1] = args["output_size"][2]
+        return out
+
+    # Updating the block object:
 
     def update_block(self, block):
         return self.add_reusable_layer(block)

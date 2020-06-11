@@ -18,9 +18,15 @@ class Relu(Layer):
         self.required_args = []
         self.kw_args = []
 
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        return cls(input_dim, batch_rank)
+    # Main loop:
+
+    # Valid permutation:
+
+    # Valid input dimensions:
+
+    # Creating the layer:
+
+    # Updating the block object:
 
     def update_block(self, block):
         # Nothing to do here since the reshape happens earlier

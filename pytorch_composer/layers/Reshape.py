@@ -15,6 +15,14 @@ class Reshape(Layer):
         self.pool = None
         self.batch_rank = batch_rank
 
+    # Main loop:
+
+    # Valid permutation:
+
+    # Valid input dimensions:
+
+    # Creating the layer:
+
     @classmethod
     def create(cls, input_dim, output_dim, other_args, batch_rank):
         if other_args is None:
@@ -29,10 +37,14 @@ class Reshape(Layer):
                 pool = AdaptiveAvgPool2d
             if len(layer.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            layer.pool = pool.create(layer.reshape_dim, tuple(pool_args), None, 0)
+
+            layer.pool = pool.create(
+                layer.reshape_dim, tuple(pool_args), None, 0)
         else:
             layer.output_dim = args[-1]
         return layer
+
+    # Updating the block object:
 
     def update_block(self, block):
         if self.pool is not None:

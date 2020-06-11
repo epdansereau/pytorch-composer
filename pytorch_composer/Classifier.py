@@ -34,35 +34,36 @@ ${hidden_copy}
             print('[%d, %5d] loss: %.3f' %
                   (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
-${debug1}        
+${debug1}
         torch.save(net.state_dict(), 'model.pt')
 
 print('Finished Training')
 '''
-    
+
         settings = {
-            "criterion":"CrossEntropyLoss",
-            "optimizer":"SGD",
-            "lr":0.001,
-            "momentum":0.9,
-            "epoch":2,
+            "criterion": "CrossEntropyLoss",
+            "optimizer": "SGD",
+            "lr": 0.001,
+            "momentum": 0.9,
+            "epoch": 2,
         }
-        
-        #adding hidden variables in training loop:
+
+        # adding hidden variables in training loop:
         if "hidden" in data.variables:
-            hidden_vars = [x[0] for x in data.variables["hidden"]]
-            var_list = ", ".join(hidden_vars)
-            settings["hidden_variables"] = ", " + var_list
-            settings["hidden_init"] = " "*4 + f"{var_list} = net.initHidden()\n"
-            settings["hidden_copy"] = ""
-            for var in hidden_vars:
-                settings["hidden_copy"] += " "*8 + f"{var} = {var}.data\n"        
-        
+            if data.variables["hidden"]:
+                hidden_vars = [x[0] for x in data.variables["hidden"]]
+                var_list = ", ".join(hidden_vars)
+                settings["hidden_variables"] = ", " + var_list
+                settings["hidden_init"] = " " * 4 + \
+                    f"{var_list} = net.initHidden()\n"
+                settings["hidden_copy"] = ""
+                for var in hidden_vars:
+                    settings["hidden_copy"] += " " * \
+                        8 + f"{var} = {var}.data\n"
+
         imports = set((
             "torch",
             "torch.optim as optim",
             "torch.nn as nn",
         ))
-        super().__init__(self.template, settings, data.variables ,imports)
-        
-                
+        super().__init__(self.template, settings, data.variables, imports)

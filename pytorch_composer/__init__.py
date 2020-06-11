@@ -1,3 +1,5 @@
+from .Classifier import Classifier
+from pytorch_composer.CodeSection import CodeSection
 import math
 import numpy as np
 from collections import Counter, defaultdict
@@ -21,8 +23,6 @@ from .layers import permute
 # layers["Linear"] will return the Linear class.
 layers = {x.__name__: x for x in Layer.__subclasses__()}
 
-from pytorch_composer.CodeSection import CodeSection
-from .Classifier import Classifier
 
 def parse_entry(entry):
     '''
@@ -53,9 +53,10 @@ def parse_entry(entry):
             other_args = entry[-1]
     return layer_type, dimension, other_args
 
+
 class Block():
     """
-    Object that parses a sequence, creates and holds the code of the model as a list. 
+    Object that parses a sequence, creates and holds the code of the model as a list.
     """
 
     def __init__(
@@ -64,11 +65,11 @@ class Block():
             groups=None,
             layers_list=None,
             forward_function=None,
-            input_dim = None,
-            output_dim = None,
+            input_dim=None,
+            output_dim=None,
             hidden=None,
-            batch_rank = 0
-            ):
+            batch_rank=0
+    ):
         if count is None:
             count = Counter()
         if groups is None:
@@ -79,22 +80,23 @@ class Block():
             forward_function = []
         if hidden is None:
             hidden = []
-        
+
         self.count = count
         self.groups = groups
         self.layers_list = layers_list
         self.forward_function = forward_function
-        
+        self._code = None
+
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.hidden = hidden
         self.batch_rank = batch_rank
-        
+
         # Recurrent layers
         self.recurrent = 0
-           
+
     @property
-    def code(self):
+    def parsed_code(self):
         ''' Code of the model in a list of lists'''
         vars_ = "x"
         hidden_init = []
@@ -104,44 +106,70 @@ class Block():
             # Hidden init:
             hidden_init = [["def", "initHidden(self):"]]
             for var in self.hidden:
-                hidden_init.append(["code","{} = torch.zeros{}".format(var[0], var[1])])
-            hidden_init.append(["code","return " + vars_hidden])
-                
+                hidden_init.append(
+                    ["code", "{} = torch.zeros{}".format(var[0], var[1])])
+            hidden_init.append(["code", "return " + vars_hidden])
+
         return [
             ["class", "${model_name}(nn.Module):"],
             ["def", "__init__(self):"],
             ["code", "super(${model_name}, self).__init__()"],
             *self.layers_list,
-            ["def", "forward(self, " + vars_ +"):"],
+            ["def", "forward(self, " + vars_ + "):"],
             ["comment", "Input dimensions : ", tuple(self.input_dim)],
             *self.forward_function,
             ["comment", "Output dimensions : ", tuple(self.output_dim)],
             ["code", "return " + vars_],
             *hidden_init
         ]
-        
+
+    @property
+    def code(self):
+        if self._code is None:
+            return self.parsed_code
+        else:
+            # Manually setting the code
+            return self._code
+
     def __str__(self):
         return self.write(self.code)
-    
+
     @classmethod
     def create(cls, sequence, input_dim, batch_rank):
         ''' The sequence provided is parsed and turned into a block object'''
-        block = cls(input_dim = list(input_dim), output_dim = list(input_dim), batch_rank = batch_rank)
+        block = cls(
+            input_dim=list(input_dim),
+            output_dim=list(input_dim),
+            batch_rank=batch_rank)
+
+        # Main loop:
+
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
-            # Make the input dims fit with the  requested layer:
-            permutation = layers[layer_type].permutation(block.output_dim, block.batch_rank, other_args)
+
+            # Valid permutation:
+
+            permutation = layers[layer_type].permutation(
+                block.output_dim, block.batch_rank, other_args)
             if permutation:
                 block = block.update("permute", permutation)
-            valid_input_dims = layers[layer_type].valid_input_dims(block.output_dim, block.batch_rank)
+            valid_input_dims = layers[layer_type].valid_input_dims(
+                block.output_dim, block.batch_rank)
+
+            # Valid input dimensions:
+
             if valid_input_dims is not block.output_dim:
                 block = block.update("Reshape", valid_input_dims)
-            # Add code for the requested sequence
+
+            # Adding the requested layer:
+
             block = block.update(layer_type, dimension_arg, other_args)
+
         return block
 
-    def update(self, layer_type, dimension_arg = None, other_args = None):
-        layer = layers[layer_type].create(self.output_dim, dimension_arg, other_args, self.batch_rank)
+    def update(self, layer_type, dimension_arg=None, other_args=None):
+        layer = layers[layer_type].create(
+            self.output_dim, dimension_arg, other_args, self.batch_rank)
         block = layer.update_block(self)
         block.output_dim = layer.output_dim
         block.batch_rank = layer.batch_rank
@@ -153,7 +181,7 @@ class Block():
 
     def add_layer(self, line):
         self.layers_list.append(line)
-        
+
     @staticmethod
     def write(code):
         "Converts the code saved as a list to a string with the proper indentation"
@@ -176,22 +204,30 @@ class Block():
                 str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
             last = line[0]
         return str_
-        
+
+
 class Model(CodeSection):
     ''' CodeSection object built from sequence'''
+
     def __init__(self, sequence, data):
         if data is None:
-            variables = {"x":[("x0",[4,3,32,32],0)]} # Default variable
+            variables = {"x": [("x0", [4, 3, 32, 32], 0)]}  # Default variable
         elif isinstance(data, list):
-            variables = {"x":[("x0",data,0)]}        
+            variables = {"x": [("x0", data, 0)]}
         elif isinstance(data, CodeSection):
             variables = data.variables
         else:
             raise ValueError
-        self.block = Block.create(sequence, variables["x"][0][1],variables["x"][0][2])
-        variables["x"][0] = (variables["x"][0][0], self.block.output_dim, self.block.batch_rank)
+        self.block = Block.create(
+            sequence,
+            variables["x"][0][1],
+            variables["x"][0][2])
+        variables["x"][0] = (
+            variables["x"][0][0],
+            self.block.output_dim,
+            self.block.batch_rank)
         variables["hidden"] = self.block.hidden
-        defaults = {"model_name":"Net","batch_rank":self.block.batch_rank}
+        defaults = {"model_name": "Net", "batch_rank": self.block.batch_rank}
         imports = set((
             "torch",
             "torch.nn as nn",
@@ -201,17 +237,19 @@ class Model(CodeSection):
 
     @property
     def template(self):
-        return str(self.block)    
-    
-    def set_output(self,output_dim):
+        return str(self.block)
+
+    def set_output(self, output_dim):
         if output_dim is not block.output_dim:
-            reshape = layers["Reshape"].create(self.block.output_dim, output_dim)
-            self.block = self.block.update(reshape)        
-    
+            reshape = layers["Reshape"].create(
+                self.block.output_dim, output_dim)
+            self.block = self.block.update(reshape)
+
+
 class Code:
     def __init__(self, code_sections):
         self.sections = code_sections
-        
+
     @property
     def str_(self):
         imports = set()
@@ -219,15 +257,17 @@ class Code:
         for section in self.sections:
             imports = imports.union(section.imports)
             code += section.code
-        return CodeSection.write_imports(imports) +"\n" + code
-    
+        return CodeSection.write_imports(imports) + "\n" + code
+
     def __str__(self):
         return self.str_
-    
+
     def __repr__(self):
         return self.str_
-    
+
+    def save(self, file_name="train.py"):
+        with open(file_name, "w") as f:
+            f.write(str(self))
+
     def execute(self):
         exec(str(self), globals(), globals())
-    
-    

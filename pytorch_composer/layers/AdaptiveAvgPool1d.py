@@ -2,7 +2,7 @@ from pytorch_composer.Layer import Layer
 
 
 class AdaptiveAvgPool1d(Layer):
-    def __init__(self, input_dim,batch_rank):
+    def __init__(self, input_dim, batch_rank):
         self.layer_type = "adaptiveavgpool1d"
         self.args = None
         self.input_dim = input_dim
@@ -17,28 +17,35 @@ class AdaptiveAvgPool1d(Layer):
         self.dimension_key = 'output_size'
         self.required_args = ['output_size']
         self.kw_args = []
-        
+
+    # Main loop:
+
+    # Valid permutation:
+
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
-        return 0        
+        return 0
 
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim, batch_rank)
-        if type(dimension_arg) == tuple:
-            dimension_arg = dimension_arg[0]
-        out = input_dim.copy()
-        out[-1] = dimension_arg
-        layer.output_dim = out
-        layer.args = layer.write_args({'output_size':dimension_arg})
-        return layer
+    # Valid input dimensions:
 
     @staticmethod
     def valid_input_dims(input_dims, batch_rank):
-        return Layer.change_rank(input_dims,3, batch_rank)
+        return Layer.change_rank(input_dims, 3, batch_rank)
 
-    
+    # Creating the layer:
+
+    def get_valid_args(self, args):
+        #TD: remove
+        if isinstance(args["output_size"], tuple):
+            args["output_size"] = args["output_size"][0]
+        return args
+
+    def get_output_dim(self, args):
+        out = self.input_dim.copy()
+        out[-1] = args["output_size"]
+        return out
+
+    # Updating the block object:
+
     def update_block(self, block):
         return self.add_reusable_layer(block)

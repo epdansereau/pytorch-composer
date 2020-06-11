@@ -20,18 +20,24 @@ class Linear(Layer):
         self.required_args = ['in_features', 'out_features']
         self.kw_args = ['bias']
 
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim, batch_rank)
-        args = layer.active_args(dimension_arg, other_args)
-        args['in_features'] = input_dim[-1]
-        args['out_features'] = dimension_arg
-        layer.output_dim = input_dim.copy()
-        layer.output_dim[-1] = dimension_arg
-        layer.args = layer.write_args(args)
-        return layer
+    # Main loop:
+
+    # Valid permutation:
+
+    # Valid input dimensions:
+
+    # Creating the layer:
+
+    def get_valid_args(self, args):
+        args['in_features'] = self.input_dim[-1]
+        return args
+
+    def get_output_dim(self, args):
+        out = self.input_dim.copy()
+        out[-1] = args['out_features']
+        return out
+
+    # Updating the block object:
 
     def update_block(self, block):
         return self.add_unique_layer(block)

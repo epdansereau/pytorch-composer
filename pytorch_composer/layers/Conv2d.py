@@ -34,40 +34,29 @@ class Conv2d(Layer):
             "groups",
             "bias",
             "padding_mode"]
-    
-    ## Main loop:
-    
-    # Valid permutation:    
-    
+
+    # Main loop:
+
+    # Valid permutation:
+
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
-        return 0  
+        return 0
 
     # Valid input dimensions:
-    
+
     @staticmethod
     def valid_input_dims(input_dims, batch_rank):
         return Layer.change_rank(input_dims, 4, batch_rank)
-    
-    #Creating the layer:
-    @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim, batch_rank)
-        args = layer.active_args(dimension_arg, other_args)
-        args["in_channels"] = input_dim[1]
-        args["out_channels"] = dimension_arg
-        args = layer.get_valid_args(args, input_dim)
-        layer.output_dim = layer.get_output_dim(input_dim, args)
-        layer.args = layer.write_args(args)
-        return layer    
 
-    def get_valid_args(self, args, input_dim):
+    # Creating the layer:
+
+    def get_valid_args(self, args):
+        args["in_channels"] = self.input_dim[1]
         to_tuple = ["padding", "kernel_size"]
         args = self.ints_to_tuples(args, to_tuple)
         missing_padding_0, missing_padding_1 = self._missing_padding(
-            input_dim[2], input_dim[3], args["kernel_size"], args["padding"])
+            self.input_dim[2], self.input_dim[3], args["kernel_size"], args["padding"])
         args["padding"] = (
             args["padding"][0] +
             missing_padding_0,
@@ -76,13 +65,15 @@ class Conv2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def get_output_dim(self, input_dim, args):
+    def get_output_dim(self, args):
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(args.copy(), to_tuple)
-        h_out, w_out = self._conv_dim(input_dim[2], input_dim[3], args_["padding"], args_[
+        h_out, w_out = self._conv_dim(self.input_dim[2],
+                                      self.input_dim[3], args_["padding"], args_[
             "dilation"], args_["kernel_size"], args_["stride"])
-        return [input_dim[0], args_["out_channels"], h_out, w_out]
+        return [self.input_dim[0], args_["out_channels"], h_out, w_out]
 
     # Updating the block object:
+
     def update_block(self, block):
         return self.add_unique_layer(block)
