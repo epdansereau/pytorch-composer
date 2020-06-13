@@ -3,14 +3,13 @@ from pytorch_composer.Layer import Layer
 
 class Flat(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "flat"
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = input_dim
+        self.input_dim = variables.output_dim.copy()
         self.nn = None
         self.description = "Flatenning the data"
-        self.batch_rank = batch_rank
+        self.variables = variables
 
         # Arguments:
         self.default_args = {}

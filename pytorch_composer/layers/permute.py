@@ -4,13 +4,13 @@ import numpy as np
 
 class permute(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "permute"
-        self.input_dim = input_dim
+        self.input_dim = variables.output_dim.copy()
         self.reshape_dim = None
-        self.output_dim = None
         self.permutation = None
-        self.batch_rank = batch_rank
+        self.variables = variables
+
 
     # Main loop:
 
@@ -21,23 +21,24 @@ class permute(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, input_dim, permutation, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        new_batch_rank = permutation[batch_rank]
-        layer = cls(input_dim, new_batch_rank)
+    def create(cls, variables, permutation, _):
+        layer = cls(variables)
         layer.permutation = permutation
-        # Finding
-        if len(input_dim) > len(permutation):
-            layer.reshape_dim = input_dim[:-2] + \
-                [np.prod(input_dim[len(permutation) - 1:])]
+        if len(layer.input_dim) > len(permutation):
+            layer.reshape_dim = layer.input_dim[:-2] + \
+                [np.prod(layer.input_dim[len(permutation) - 1:])]
         else:
-            layer.reshape_dim = input_dim + \
-                [1] * (len(permutation) - len(input_dim))
-        layer.output_dim = layer.reshape_dim.copy()
-        for i, v in zip(permutation, layer.reshape_dim):
-            layer.output_dim[i] = v
+            layer.reshape_dim = layer.input_dim + \
+                [1] * (len(permutation) - len(layer.input_dim))
+        layer.update_variables(permutation)
         return layer
+    
+
+    def update_variables(self, permutation):
+        out = self.reshape_dim.copy()
+        for i, v in zip(permutation, self.reshape_dim):
+            out[i] = v
+        self.variables.update_x(out, permutation[self.batch_rank])
 
     # Updating the block object:
 

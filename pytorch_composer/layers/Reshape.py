@@ -7,13 +7,12 @@ from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 
 class Reshape(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "reshape"
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables.output_dim.copy()
         self.reshape_dim = None
         self.pool = None
-        self.batch_rank = batch_rank
+        self.variables = variables
 
     # Main loop:
 
@@ -24,24 +23,24 @@ class Reshape(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, input_dim, output_dim, other_args, batch_rank):
-        if other_args is None:
-            other_args = {}
-        layer = cls(input_dim, batch_rank)
-        args = resizing_args(input_dim, list(output_dim))
-        if len(args) == 3:
-            layer.reshape_dim, pool_args, layer.output_dim = args
+    def create(cls, variables, dimension_arg, _):
+        
+        layer = cls(variables)
+        res_dims = resizing_args(layer.input_dim, list(dimension_arg))
+        if len(res_dims) == 3:
+            # Pooling layer needed
+            layer.reshape_dim, pool_args, out = res_dims
+            layer.variables.update_x(layer.reshape_dim)
             if len(layer.reshape_dim) == 3:
                 pool = AdaptiveAvgPool1d
             if len(layer.reshape_dim) == 4:
                 pool = AdaptiveAvgPool2d
             if len(layer.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-
-            layer.pool = pool.create(
-                layer.reshape_dim, tuple(pool_args), None, 0)
+            layer.pool = pool.create(layer.variables.copy(), tuple(pool_args), None)
+            layer.variables.update_x(out)
         else:
-            layer.output_dim = args[-1]
+            layer.variables.update_x(res_dims[-1])
         return layer
 
     # Updating the block object:

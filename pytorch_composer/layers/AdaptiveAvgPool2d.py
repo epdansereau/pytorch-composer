@@ -3,14 +3,13 @@ from pytorch_composer.Layer import Layer
 
 class AdaptiveAvgPool2d(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "adaptiveavgpool2d"
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.AdaptiveAvgPool2d"
         self.description = "Resizing with adaptive average pooling"
-        self.batch_rank = batch_rank
+        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -38,11 +37,11 @@ class AdaptiveAvgPool2d(Layer):
         args["output_size"] = self.int_to_tuple(args["output_size"])
         return args
 
-    def get_output_dim(self, args):
+    def update_variables(self, args):
         out = self.input_dim.copy()
         out[-2] = args["output_size"][0]
         out[-1] = args["output_size"][1]
-        return out
+        self.variables.update_x(out)
 
     # Updating the block object:
 

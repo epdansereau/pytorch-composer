@@ -109,6 +109,7 @@ test_result = {}
     debug_code = pytorch_composer.Code([debug_code, dataset, model, loop])
     # adding test code:
     debug_code.sections[2].block.code = add_dims_check(debug_code.sections[2].block.code)
+    print(debug_code)
     try:
         exec(str(debug_code), globals(), globals())
     except Exception as error:

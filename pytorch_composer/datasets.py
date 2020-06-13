@@ -24,16 +24,13 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=4,
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 '''
-        self.defaults = {}
         self.imports = set((
             "torch",
             "torchvision",
             "torchvision.transforms as transforms"
         ))
-        super().__init__(self.template, settings, self.defaults,self.imports)
-        self.variables = {
-            "x":[("x0",[4,3,32,32],0)],
-            "y":[("y0",[4,10],0)]
-        }
+        super().__init__(self.template, settings, None, self.imports)
+        self.variables.add_variable("x",[4,3,32,32],0)
+        self.variables.add_variable("y",[4,10],0)
         
 

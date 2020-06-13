@@ -49,9 +49,9 @@ print('Finished Training')
         }
 
         # adding hidden variables in training loop:
-        if "hidden" in data.variables:
-            if data.variables["hidden"]:
-                hidden_vars = [x[0] for x in data.variables["hidden"]]
+        if "h" in data.variables:
+            if data.variables["h"]:
+                hidden_vars = [x.name for x in data.variables["h"]]
                 var_list = ", ".join(hidden_vars)
                 settings["hidden_variables"] = ", " + var_list
                 settings["hidden_init"] = " " * 4 + \
@@ -69,4 +69,4 @@ print('Finished Training')
         super().__init__(self.template, settings, data.variables, imports)
         
     def require_input(self, input_ = None):
-        return self.variables["y"][0][1]
+        return self.variables["y"][0].dim

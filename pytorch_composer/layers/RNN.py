@@ -3,14 +3,13 @@ from pytorch_composer.Layer import Layer
 
 class RNN(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "rnn"
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.RNN"
         self.description = "Recurrent layer"
-        self.batch_rank = batch_rank
+        self.variables = variables
 
         # Arguments
         self.default_args = {
@@ -50,13 +49,13 @@ class RNN(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
+    def create(cls, variables, dimension_arg, other_args):
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim, batch_rank)
+        layer = cls(variables)
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args)
-        layer.output_dim = layer.get_output_dim(args)
+        layer.update_variables(args)
         if args["batch_first"]:
             layer.hidden_dim = tuple(
                 [1, layer.output_dim[0], layer.output_dim[2]])
@@ -69,20 +68,20 @@ class RNN(Layer):
         args['input_size'] = self.input_dim[-1]
         return args
 
-    def get_output_dim(self, args):
+    def update_variables(self, args):
         out = self.input_dim.copy()
         out[-1] = args['hidden_size']
-        return out
+        self.variables.update_x(out)
 
     # Updating the block object:
 
     def update_block(self, block):
-        ind = str(len(block.hidden))
-        hidden_var = ("h" + ind, self.hidden_dim, self.batch_rank)
-        block.hidden.append(hidden_var)
-        return self.add_hidden_layer(block, hidden_var[0], ind)
+        block.variables.add_variable("h",self.hidden_dim, self.batch_rank)
+        return self.add_hidden_layer(block)
 
-    def add_hidden_layer(self, block, hidden_var, ind):
+    def add_hidden_layer(self, block):
+        hidden_var = self.variables["h"][-1].name
+        ind = len(self.variables["h"])
         block.count[self.layer_type] += 1
         block.add_layer(["layer", "self.{}".format(
             self.layer_type), ind, " = {}({})".format(self.nn, self.args)])
@@ -95,5 +94,4 @@ class RNN(Layer):
             ["forward", "x, {} = ".format(hidden_var),
              "self.{}{}".format(self.layer_type, ind),
              "(x, {})".format(hidden_var)])
-
         return block

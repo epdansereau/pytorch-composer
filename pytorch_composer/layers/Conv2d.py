@@ -4,14 +4,13 @@ import math
 
 class Conv2d(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "conv2d"
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.Conv2d"
         self.description = "Convolution layer (2d)"
-        self.batch_rank = batch_rank
+        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -65,13 +64,13 @@ class Conv2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def get_output_dim(self, args):
+    def update_variables(self, args):
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(args.copy(), to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2],
                                       self.input_dim[3], args_["padding"], args_[
             "dilation"], args_["kernel_size"], args_["stride"])
-        return [self.input_dim[0], args_["out_channels"], h_out, w_out]
+        self.variables.update_x([self.input_dim[0], args_["out_channels"], h_out, w_out])
 
     # Updating the block object:
 

@@ -10,18 +10,25 @@ class Layer():
 
     """
 
-    def __init__(self, input_dim=None, batch_rank=None):
+    def __init__(self, variables):
         self.layer_type = None
-        self.batch_rank = batch_rank
+        self.variables = variables
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables["x"][0].dim
         self.nn = None
         self.description = None
 
     # Main loop:
 
     # Valid permutation:
+    
+    @property
+    def batch_rank(self):
+        return self.variables["x"][0].batch_rank
+    
+    @property
+    def output_dim(self):
+        return self.variables["x"][0].dim
 
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
@@ -75,14 +82,14 @@ class Layer():
     # Creating the layer:
 
     @classmethod
-    def create(cls, input_dim, dimension_arg, other_args, batch_rank):
+    def create(cls, variables, dimension_arg, other_args):
         # TBD
         if other_args is None:
             other_args = {}
-        layer = cls(input_dim, batch_rank)
+        layer = cls(variables)
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args)
-        layer.output_dim = layer.get_output_dim(args)
+        layer.update_variables(args)
         layer.args = layer.write_args(args)
         return layer
 
@@ -117,8 +124,8 @@ class Layer():
     def get_valid_args(self, args):
         return args
 
-    def get_output_dim(self, args):
-        return self.input_dim.copy()
+    def update_variables(self, args):
+        pass
 
     def write_args(self, args):
         # Converts the layer's arguments into code.

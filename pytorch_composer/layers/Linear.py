@@ -3,14 +3,13 @@ from pytorch_composer.Layer import Layer
 
 class Linear(Layer):
 
-    def __init__(self, input_dim, batch_rank):
+    def __init__(self, variables):
         self.layer_type = "linear"
         self.args = None
-        self.input_dim = input_dim
-        self.output_dim = None
+        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.Linear"
         self.description = "Linear layer"
-        self.batch_rank = batch_rank
+        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -32,10 +31,10 @@ class Linear(Layer):
         args['in_features'] = self.input_dim[-1]
         return args
 
-    def get_output_dim(self, args):
+    def update_variables(self, args):
         out = self.input_dim.copy()
         out[-1] = args['out_features']
-        return out
+        self.variables.update_x(out)
 
     # Updating the block object:
 

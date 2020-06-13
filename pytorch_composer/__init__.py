@@ -59,56 +59,37 @@ class Block():
     Object that parses a sequence, creates and holds the code of the model as a list.
     """
 
-    def __init__(
-            self,
-            count=None,
-            groups=None,
-            layers_list=None,
-            forward_function=None,
-            input_dim=None,
-            output_dim=None,
-            hidden=None,
-            batch_rank=0
-    ):
-        if count is None:
-            count = Counter()
-        if groups is None:
-            groups = defaultdict(list)
-        if layers_list is None:
-            layers_list = []
-        if forward_function is None:
-            forward_function = []
-        if hidden is None:
-            hidden = []
-
-        self.count = count
-        self.groups = groups
-        self.layers_list = layers_list
-        self.forward_function = forward_function
-
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.hidden = hidden
-        self.batch_rank = batch_rank
-
-        # Recurrent layers
-        self.recurrent = 0
+    def __init__(self, variables):
+        self.count = Counter()
+        self.groups = defaultdict(list)
+        self.layers_list = []
+        self.forward_function = []
+        self.variables = variables
+        self.input_dim = variables.output_dim.copy()
 
         self.code = None
+        
+    @property
+    def output_dim(self):
+        return self.variables.output_dim
+    
+    @property
+    def batch_rank(self):
+        return self.variables.batch_rank
 
     @property
     def parsed_code(self):
         ''' Code of the model in a list of lists'''
         vars_ = "x"
         hidden_init = []
-        if self.hidden:
-            vars_hidden = ", ".join([x[0] for x in self.hidden])
+        if self.variables["h"]:
+            vars_hidden = ", ".join(self.variables.names("h"))
             vars_ += ", " + vars_hidden
             # Hidden init:
             hidden_init = [["def", "initHidden(self):"]]
-            for var in self.hidden:
+            for var in self.variables["h"]:
                 hidden_init.append(
-                    ["code", "{} = torch.zeros{}".format(var[0], var[1])])
+                    ["code", "{} = torch.zeros{}".format(var.name, tuple(var.dim))])
             hidden_init.append(["code", "return " + vars_hidden])
 
         return [
@@ -128,18 +109,14 @@ class Block():
         return self.write(self.code)
 
     @classmethod
-    def create(cls, sequence, input_dim, batch_rank):
+    def create(cls, sequence, variables):
         ''' The sequence provided is parsed and turned into a block object'''
-        block = cls(
-            input_dim=list(input_dim),
-            output_dim=list(input_dim),
-            batch_rank=batch_rank)
+        block = cls(variables)
 
         # Main loop:
 
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
-
             # Valid permutation:
 
             permutation = layers[layer_type].permutation(
@@ -164,10 +141,9 @@ class Block():
 
     def update(self, layer_type, dimension_arg=None, other_args=None):
         layer = layers[layer_type].create(
-            self.output_dim, dimension_arg, other_args, self.batch_rank)
+            self.variables, dimension_arg, other_args)
         block = layer.update_block(self)
-        block.output_dim = layer.output_dim
-        block.batch_rank = layer.batch_rank
+        block.variables = layer.variables
 
         return block
 
@@ -205,30 +181,23 @@ class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
     def __init__(self, sequence, data):
-        if data is None:
-            variables = {"x": [("x0", [4, 3, 32, 32], 0)]}  # Default variable
-        elif isinstance(data, list):
-            variables = {"x": [("x0", data, 0)]}
-        elif isinstance(data, CodeSection):
-            variables = data.variables
-        else:
-            raise ValueError
-        self.block = Block.create(
-            sequence,
-            variables["x"][0][1],
-            variables["x"][0][2])
-        variables["x"][0] = (
-            variables["x"][0][0],
-            self.block.output_dim,
-            self.block.batch_rank)
-        variables["hidden"] = self.block.hidden
-        defaults = {"model_name": "Net", "batch_rank": self.block.batch_rank}
+        defaults = {"model_name": "Net"}
         imports = set((
             "torch",
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        super().__init__(None, defaults, variables, imports)
+        super().__init__(None, defaults, None, imports)
+        if data is None:
+            self.vars.add_variable("x",[4, 3, 32, 32],0)  # Default variable
+        elif isinstance(data, list):
+            self.vars.add_variable("x",data,0) 
+        elif isinstance(data, CodeSection):
+            self.variables = data.variables
+        else:
+            raise ValueError
+        self.block = Block.create(sequence,self.variables)
+        self.variables = self.block.variables
 
     @property
     def template(self):
