@@ -62,30 +62,66 @@ class Vars:
     
 
 class CodeSection(Template):
-    def __init__(self, template, settings, variables = None, imports = None):
+    def __init__(self, template = "", entered_settings = None, variables = None, imports = None):
         self._template = template
         if imports is None:
             self.imports = set()
         else:
             self.imports = set(imports)
-        if variables is None:
-            variables = Vars({})
-        self.variables = variables
-        self.defaults = {"input_dim":None,"output_dim":None}
-        self.__dict__ = {**self.defaults,**settings,**self.__dict__}
+        self.set_variables(variables)
+        if entered_settings is None:
+            entered_settings = {}
+        self.defaults = {}
+        self.entered_settings = entered_settings
+        
+    def __setitem__(self, key, item):
+        self.entered_settings[key] = item
 
+    def __getitem__(self, key):
+        return self.settings[key]
+    
+    def __contains__(self, item):
+        return item in self.settings
+    
+    def __str__(self):
+        return self.str_
+    
+    def __repr__(self):
+        return self.str_
+        
     @property
     def template(self):
         return self._template
         
     @property
-    def args(self):
+    def template_keys(self):
         return [x[1] for x in Formatter().parse(self.template) if x[1]]
-        
+    
     @property
     def settings(self):
-        return {arg:defaultdict(str,self.__dict__)[arg] for arg in self.args}
+        return {**self.defaults,**self.entered_settings}
+        
+    @property
+    def active_settings(self):
+        return self.settings
     
+    @property
+    def template_settings(self):
+        return {arg:defaultdict(str,self.active_settings)[arg] for arg in self.template_keys}
+    
+    def set_default_variables(self):
+        pass
+    
+    def set_variables(self, variables):
+        if variables is None:
+            self.variables  = Vars({})
+            self.set_default_variables()
+        elif isinstance(variables, Vars):
+            self.variables = variables
+        elif isinstance(variables, CodeSection):
+            self.variables = variables.variables
+        else:
+            raise ValueError
     @staticmethod
     def write_imports(imports):
         code = ""
@@ -98,17 +134,11 @@ class CodeSection(Template):
     
     @property
     def code(self):
-        return Template(self.template).substitute(self.settings)
+        return Template(self.template).substitute(self.template_settings)
     
     @property
     def str_(self):
         return self.write_imports(self.imports) + self.code
-    
-    def __str__(self):
-        return self.str_
-    
-    def __repr__(self):
-        return self.str_
     
     @property
     def out(self):

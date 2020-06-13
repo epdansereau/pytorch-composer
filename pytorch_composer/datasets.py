@@ -3,8 +3,7 @@ from pytorch_composer.CodeSection import CodeSection
 
 class CIFAR10(CodeSection):
     def __init__(self, settings = None):
-        if settings is None:
-            settings = {"input_dim":None,"output_dim":[4,3,32,32]}
+        super().__init__()
         self._template = '''
 # Load and normalize the dataset
 transform = transforms.Compose(
@@ -29,7 +28,8 @@ classes = ('plane', 'car', 'bird', 'cat',
             "torchvision",
             "torchvision.transforms as transforms"
         ))
-        super().__init__(self.template, settings, None, self.imports)
+    
+    def set_default_variables(self):
         self.variables.add_variable("x",[4,3,32,32],0)
         self.variables.add_variable("y",[4,10],0)
         

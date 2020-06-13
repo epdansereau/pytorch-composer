@@ -117,17 +117,18 @@ class Block():
 
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
+            
             # Valid permutation:
 
             permutation = layers[layer_type].permutation(
                 block.output_dim, block.batch_rank, other_args)
             if permutation:
                 block = block.update("permute", permutation)
-            valid_input_dims = layers[layer_type].valid_input_dims(
-                block.output_dim, block.batch_rank)
 
             # Valid input dimensions:
-
+            
+            valid_input_dims = layers[layer_type].valid_input_dims(
+                block.output_dim, block.batch_rank)
             if valid_input_dims is not block.output_dim:
                 block = block.update("Reshape", valid_input_dims)
 
@@ -181,24 +182,19 @@ class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
     def __init__(self, sequence, data):
-        defaults = {"model_name": "Net"}
-        imports = set((
+        super().__init__(variables = data)
+        self.defaults = {"model_name": "Net"}
+        self.imports = set((
             "torch",
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        super().__init__(None, defaults, None, imports)
-        if data is None:
-            self.vars.add_variable("x",[4, 3, 32, 32],0)  # Default variable
-        elif isinstance(data, list):
-            self.vars.add_variable("x",data,0) 
-        elif isinstance(data, CodeSection):
-            self.variables = data.variables
-        else:
-            raise ValueError
         self.block = Block.create(sequence,self.variables)
         self.variables = self.block.variables
 
+    def set_default_variables(self):
+        self.variables.add_variable("x",[4, 3, 32, 32],0)
+        
     @property
     def template(self):
         return str(self.block)
@@ -216,8 +212,10 @@ class Code:
         # Starting from the end of the list, each section can request an output size 
         # from the previous section. 
         if len(self.sections) > 1:
-            for i in range(len(self.sections))[-1::-1]:
+            for i in range(len(self.sections))[1:]:
                 self.sections[i-1] = self.sections[i].fit(self.sections[i-1])
+                self.sections[i].set_variables(self.sections[i-1])
+                       
     @property
     def str_(self):
         # Combining all code sections into a string:

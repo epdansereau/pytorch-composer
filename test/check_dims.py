@@ -94,21 +94,21 @@ def test(input_dim, sequence):
     dataset = pytorch_composer.datasets.CIFAR10()
     model = pytorch_composer.Model(sequence, dataset)
     loop = pytorch_composer.Classifier(model)
-    loop.__dict__["debug1"] = "        if i == 1:\n            break"
+    loop["debug1"] = "        if i == 1:\n            break"
     print("Output:")
     print(model)
     print()
     print("Dimension test:")
-    debug_code = '''
+    add_debug_code = '''
 global test_result
 test_result = {}
 
 
 '''
-    debug_code = CodeSection(debug_code, {})
-    debug_code = pytorch_composer.Code([debug_code, dataset, model, loop])
+    debug_code = pytorch_composer.Code([dataset, model, loop])
     # adding test code:
-    debug_code.sections[2].block.code = add_dims_check(debug_code.sections[2].block.code)
+    debug_code.sections[0]._template = add_debug_code + debug_code.sections[0]._template
+    debug_code.sections[1].block.code = add_dims_check(debug_code.sections[1].block.code)
     print(debug_code)
     try:
         exec(str(debug_code), globals(), globals())

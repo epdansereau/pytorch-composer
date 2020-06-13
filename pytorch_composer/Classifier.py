@@ -4,6 +4,7 @@ from collections import defaultdict
 
 class Classifier(CodeSection):
     def __init__(self, data):
+        super().__init__(variables = data)
         self._template = '''
 # Define a Loss function and optimizer
 net = Net()
@@ -40,18 +41,27 @@ ${debug1}
 print('Finished Training')
 '''
 
-        settings = {
+        self.defaults = {
             "criterion": "CrossEntropyLoss",
             "optimizer": "SGD",
             "lr": 0.001,
             "momentum": 0.9,
             "epoch": 2,
         }
+        
+        self.imports = set((
+            "torch",
+            "torch.optim as optim",
+            "torch.nn as nn",
+        ))        
 
+    @property
+    def active_settings(self):
         # adding hidden variables in training loop:
-        if "h" in data.variables:
-            if data.variables["h"]:
-                hidden_vars = [x.name for x in data.variables["h"]]
+        settings = self.settings.copy()
+        if "h" in self.variables:
+            if self.variables["h"]:
+                hidden_vars = [x.name for x in self.variables["h"]]
                 var_list = ", ".join(hidden_vars)
                 settings["hidden_variables"] = ", " + var_list
                 settings["hidden_init"] = " " * 4 + \
@@ -60,13 +70,9 @@ print('Finished Training')
                 for var in hidden_vars:
                     settings["hidden_copy"] += " " * \
                         8 + f"{var} = {var}.data\n"
-
-        imports = set((
-            "torch",
-            "torch.optim as optim",
-            "torch.nn as nn",
-        ))
-        super().__init__(self.template, settings, data.variables, imports)
+        return settings
+            
         
     def require_input(self, input_ = None):
         return self.variables["y"][0].dim
+
