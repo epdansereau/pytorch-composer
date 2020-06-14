@@ -107,7 +107,7 @@ test_result = {}
 '''
     debug_code = pytorch_composer.Code([dataset, model, loop])
     # adding test code:
-    debug_code.sections[0]._template = add_debug_code + debug_code.sections[0]._template
+    debug_code.sections[0].template = add_debug_code + debug_code.sections[0].template
     debug_code.sections[1].block.code = add_dims_check(debug_code.sections[1].block.code)
     print(debug_code)
     try:

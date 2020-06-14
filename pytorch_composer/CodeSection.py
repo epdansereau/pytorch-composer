@@ -92,6 +92,10 @@ class CodeSection(Template):
     @property
     def template(self):
         return self._template
+    
+    @template.setter
+    def template(self, template):
+        self._template = template 
         
     @property
     def template_keys(self):
