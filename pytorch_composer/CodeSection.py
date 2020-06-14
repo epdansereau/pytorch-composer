@@ -62,7 +62,7 @@ class Vars:
     
 
 class CodeSection(Template):
-    def __init__(self, template = "", entered_settings = None, variables = None, imports = None):
+    def __init__(self, variables = None, template = "", entered_settings = None, imports = None):
         self._template = template
         if imports is None:
             self.imports = set()

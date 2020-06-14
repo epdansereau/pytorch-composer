@@ -4,7 +4,7 @@ from collections import defaultdict
 
 class Classifier(CodeSection):
     def __init__(self, data):
-        super().__init__(variables = data)
+        super().__init__(data)
         self._template = '''
 # Define a Loss function and optimizer
 net = Net()

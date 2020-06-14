@@ -182,7 +182,7 @@ class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
     def __init__(self, sequence, data):
-        super().__init__(variables = data)
+        super().__init__(data)
         self.defaults = {"model_name": "Net"}
         self.imports = set((
             "torch",
