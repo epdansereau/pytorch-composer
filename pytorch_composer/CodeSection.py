@@ -85,7 +85,7 @@ class SettingsDict(dict):
     def unlink(self):
         self.linked_to = None
 
-class CodeSection(Template):
+class CodeSection:
     def __init__(self, variables = None, settings = None, defaults = None, template = "", imports = None, linked_to = None):
         self._template = template
         if imports is None:
