@@ -151,7 +151,7 @@ class Layer():
     def update_block(self, block):
         # The Block.update function creates a Layer object, and calls this
         # function to update itself.
-        return block
+        pass
 
     def add_unique_layer(self, block, hidden=False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the
@@ -173,7 +173,6 @@ class Layer():
         else:
             block.add_forward(
                 ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
-        return block
 
     def add_reusable_layer(self, block):
         # Updates the block layers of the same type can be reused in the
@@ -192,7 +191,6 @@ class Layer():
                            tuple(self.output_dim)])
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
-        return block
 
     # Various utility functions used by layer classes:
 

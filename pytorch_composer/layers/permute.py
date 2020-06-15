@@ -49,4 +49,3 @@ class permute(Layer):
                     ["reshape", "x = x.view{}".format(tuple(self.reshape_dim))])
             block.add_forward(
                 ["permute", "x = x.permute{}".format(tuple(self.permutation))])
-        return block

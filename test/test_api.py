@@ -1,5 +1,6 @@
 import pytorch_composer
 import pytorch_composer.datasets
+from pytorch_composer.Classifier import Classifier
 
 
 sequence = [
@@ -18,7 +19,7 @@ sequence = [
 
 dataset = pytorch_composer.datasets.CIFAR10()
 model = pytorch_composer.Model(sequence, dataset)
-loop = pytorch_composer.Classifier(model)
+loop = Classifier(model)
 
 code = pytorch_composer.Code([dataset, model, loop])
 

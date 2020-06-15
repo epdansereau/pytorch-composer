@@ -47,4 +47,4 @@ class AdaptiveAvgPool1d(Layer):
     # Updating the block object:
 
     def update_block(self, block):
-        return self.add_reusable_layer(block)
+        self.add_reusable_layer(block)

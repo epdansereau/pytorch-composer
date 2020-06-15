@@ -30,4 +30,3 @@ class Relu(Layer):
     def update_block(self, block):
         # Nothing to do here since the reshape happens earlier
         block.add_forward(["reshape", "x = F.relu(x)"])
-        return block

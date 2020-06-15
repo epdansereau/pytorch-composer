@@ -49,7 +49,6 @@ class Reshape(Layer):
         if self.pool is not None:
             block.add_forward(
                 ["reshape", "x = x.view{}".format(tuple(self.reshape_dim))])
-            block = self.pool.update_block(block)
+            self.pool.update_block(block)
         block.add_forward(
             ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
-        return block

@@ -1,25 +1,7 @@
-from .Classifier import Classifier
-from pytorch_composer.CodeSection import CodeSection, SettingsDict
+from .CodeSection import CodeSection, SettingsDict
+from .get_layer import get_layer
+
 from collections import Counter, defaultdict
-
-from .Layer import Layer
-
-from .layers import Linear
-from .layers import Conv2d
-from .layers import MaxPool2d
-from .layers import Reshape
-from .layers import Flat
-from .layers import Relu
-from .layers import AdaptiveAvgPool1d
-from .layers import AdaptiveAvgPool2d
-from .layers import AdaptiveAvgPool3d
-from .layers import RNN
-from .layers import permute
-
-# The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
-# Example:
-# layers["Linear"] will return the Linear class.
-layers = {x.__name__: x for x in Layer.__subclasses__()}
 
 
 def parse_entry(entry):
@@ -57,7 +39,7 @@ class Block():
     Object that parses a sequence, creates and holds the code of the model as a list.
     """
 
-    def __init__(self, variables):
+    def __init__(self, sequence, variables):
         self.count = Counter()
         self.groups = defaultdict(list)
         self.layers_list = []
@@ -65,7 +47,30 @@ class Block():
         self.variables = variables
         self.input_dim = variables.output_dim.copy()
 
-        self.code = None
+        # Main loop:
+
+        for entry in sequence:
+            layer_type, dimension_arg, other_args = parse_entry(entry)
+            
+            # Valid permutation:
+
+            permutation = get_layer(layer_type).permutation(
+                self.output_dim, self.batch_rank, other_args)
+            if permutation:
+                self.update("permute", permutation)
+
+            # Valid input dimensions:
+            
+            valid_input_dims = get_layer(layer_type).valid_input_dims(
+                self.output_dim, self.batch_rank)
+            if valid_input_dims is not self.output_dim:
+                self.update("Reshape", valid_input_dims)
+
+            # Adding the requested layer:
+
+            self.update(layer_type, dimension_arg, other_args)
+            
+        self.code = self.parsed_code
         
     @property
     def output_dim(self):
@@ -106,45 +111,11 @@ class Block():
     def __str__(self):
         return self.write(self.code)
 
-    @classmethod
-    def create(cls, sequence, variables):
-        ''' The sequence provided is parsed and turned into a block object'''
-        block = cls(variables)
-
-        # Main loop:
-
-        for entry in sequence:
-            layer_type, dimension_arg, other_args = parse_entry(entry)
-            
-            # Valid permutation:
-
-            permutation = layers[layer_type].permutation(
-                block.output_dim, block.batch_rank, other_args)
-            if permutation:
-                block = block.update("permute", permutation)
-
-            # Valid input dimensions:
-            
-            valid_input_dims = layers[layer_type].valid_input_dims(
-                block.output_dim, block.batch_rank)
-            if valid_input_dims is not block.output_dim:
-                block = block.update("Reshape", valid_input_dims)
-
-            # Adding the requested layer:
-
-            block = block.update(layer_type, dimension_arg, other_args)
-            
-        block.code = block.parsed_code
-
-        return block
-
     def update(self, layer_type, dimension_arg=None, other_args=None):
-        layer = layers[layer_type].create(
+        layer = get_layer(layer_type).create(
             self.variables, dimension_arg, other_args)
-        block = layer.update_block(self)
-        block.variables = layer.variables
-
-        return block
+        layer.update_block(self)
+        self.variables = layer.variables
 
     def add_forward(self, line):
         self.forward_function.append(line)
@@ -197,7 +168,7 @@ class Model(CodeSection):
         self.read_sequence(self.sequence)
         
     def read_sequence(self, sequence):
-        self.block = Block.create(sequence,self.variables)
+        self.block = Block(sequence,self.variables)
         self.variables = self.block.variables
         
     @property
@@ -206,7 +177,7 @@ class Model(CodeSection):
 
     def set_output(self, output_dim):
         if output_dim is not self.block.output_dim:
-            self.block = self.block.update("Reshape", output_dim)
+            self.block.update("Reshape", output_dim)
             self.block.code = self.block.parsed_code
         return self
     

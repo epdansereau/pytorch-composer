@@ -94,4 +94,3 @@ class RNN(Layer):
             ["forward", "x, {} = ".format(hidden_var),
              "self.{}{}".format(self.layer_type, ind),
              "(x, {})".format(hidden_var)])
-        return block

@@ -1,7 +1,7 @@
 # Tests if the dimensions claimed by the comments of the generated code
 # are the same as the real dimensions
 
-import pytorch_composer
+from pytorch_composer.Classifier import Classifier
 import pytorch_composer.datasets
 import traceback
 
@@ -90,7 +90,7 @@ def test(sequence):
     ''' The accuracy should always be 100% '''
     dataset = pytorch_composer.datasets.CIFAR10()
     model = pytorch_composer.Model(sequence, dataset)
-    loop = pytorch_composer.Classifier(model,{
+    loop = Classifier(model,{
         "debug1":"        if i == 1:\n            break"
     })
     print("Output:")

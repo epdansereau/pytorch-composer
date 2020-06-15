@@ -39,4 +39,4 @@ class Linear(Layer):
     # Updating the block object:
 
     def update_block(self, block):
-        return self.add_unique_layer(block)
+        self.add_unique_layer(block)
