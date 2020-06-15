@@ -3,11 +3,8 @@
 
 import pytorch_composer
 import pytorch_composer.datasets
-from pytorch_composer.CodeSection import CodeSection
-from pytorch_composer import Block
 import traceback
 
-input_dim = [5, 2, 32, 12]
 sequence1 = [
     ["Conv2d", 6],
     ["MaxPool2d", 2],
@@ -89,32 +86,33 @@ def number_lines(code):
     return with_number
 
 
-def test(input_dim, sequence):
+def test(sequence):
     ''' The accuracy should always be 100% '''
     dataset = pytorch_composer.datasets.CIFAR10()
     model = pytorch_composer.Model(sequence, dataset)
-    loop = pytorch_composer.Classifier(model)
-    loop["debug1"] = "        if i == 1:\n            break"
+    loop = pytorch_composer.Classifier(model,{
+        "debug1":"        if i == 1:\n            break"
+    })
     print("Output:")
     print(model)
     print()
     print("Dimension test:")
-    add_debug_code = '''
+    debug_code = '''
 global test_result
 test_result = {}
 
 
 '''
-    debug_code = pytorch_composer.Code([dataset, model, loop])
+    code = pytorch_composer.Code([dataset, model, loop])
     # adding test code:
-    debug_code.sections[0].template = add_debug_code + debug_code.sections[0].template
-    debug_code.sections[1].block.code = add_dims_check(debug_code.sections[1].block.code)
-    print(debug_code)
+    code[0].template = debug_code + code[0].template
+    code[1].block.code = add_dims_check(code[1].block.code)
+    print(code)
     try:
-        exec(str(debug_code), globals(), globals())
+        exec(str(code), globals(), globals())
     except Exception as error:
         print()
-        print(number_lines(debug_code))
+        print(number_lines(code))
         print()
         print("The test above failed to execute:")
         traceback.print_exc()
@@ -134,10 +132,10 @@ test_result = {}
 
 
 print("TEST1")
-test1 = test(input_dim, sequence1)
+test1 = test(sequence1)
 print()
 print("TEST2")
-test2 = test(input_dim, sequence2)
+test2 = test(sequence2)
 print()
 print("1:", test1)
 print("2:", test2)

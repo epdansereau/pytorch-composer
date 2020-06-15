@@ -59,23 +59,54 @@ class Vars:
             self.update_dim("x",ind,new_dim)
         if new_batch_rank is not None:
             self.update_batch_rank("x",ind,new_batch_rank)   
+
+class SettingsDict(dict):
+    def __init__(self, dict_, linked_to = None):
+        self.linked_to = linked_to
+        super().__init__(dict_)
     
+    def __repr__(self):
+        # forcing the dict to be printed on several lines
+        str_ = ',\n '.join(["{}: {}".format(k.__repr__(),v.__repr__()) for k,v in self.items()])
+        return "{" + str_ + "}"
+    
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if self.linked_to is not None:
+            self.linked_to.update({key:value})
+            
+    def update(self, dict_ = None):
+        if dict_ is None:
+            dict_ = {}
+        super().update(dict_)
+        if self.linked_to is not None:
+            self.linked_to.update(dict_)
+            
+    def unlink(self):
+        self.linked_to = None
 
 class CodeSection(Template):
-    def __init__(self, variables = None, template = "", entered_settings = None, imports = None):
+    def __init__(self, variables = None, settings = None, defaults = None, template = "", imports = None, linked_to = None):
         self._template = template
         if imports is None:
             self.imports = set()
         else:
             self.imports = set(imports)
+        if settings is None:
+            settings = {}
+        if defaults is None:
+            defaults = {}
+        self.defaults = defaults
+        self.entered_settings = settings
         self.set_variables(variables)
-        if entered_settings is None:
-            entered_settings = {}
-        self.defaults = {}
-        self.entered_settings = entered_settings
+        self.linked_to = None
+        
+    def setitem(self, key, item):
+        self.entered_settings[key] = item
         
     def __setitem__(self, key, item):
-        self.entered_settings[key] = item
+        self.setitem(key, item)
+        self.update()
 
     def __getitem__(self, key):
         return self.settings[key]
@@ -103,8 +134,15 @@ class CodeSection(Template):
     
     @property
     def settings(self):
-        return {**self.defaults,**self.entered_settings}
+        return SettingsDict({**self.defaults,**self.entered_settings}, self)
         
+    @settings.setter
+    def settings(self, settings):
+        if not isinstance(settings, dict):
+            raise TypeError
+        self.entered_settings = settings
+        self.update()
+    
     @property
     def active_settings(self):
         return self.settings
@@ -112,6 +150,24 @@ class CodeSection(Template):
     @property
     def template_settings(self):
         return {arg:defaultdict(str,self.active_settings)[arg] for arg in self.template_keys}
+    
+    def unlink(self):
+        self.linked_to = None
+        
+    def update(self, settings = None):
+        if settings:
+            keys = set(self.settings.keys())
+            if keys.union(set(settings)) != keys:
+                raise KeyError("Settings not found: {}".format(set(settings) - keys))
+            self._update(settings)
+        if self.linked_to is not None:
+            self.linked_to.update()
+            
+    def _update(self, settings):
+        # Updates only the section. Ignores keys not in defaults.
+        for k, v in settings.items():
+            if k in self.settings:
+                self[k] = v
     
     def set_default_variables(self):
         pass
@@ -121,11 +177,12 @@ class CodeSection(Template):
             self.variables  = Vars({})
             self.set_default_variables()
         elif isinstance(variables, Vars):
-            self.variables = variables
+            self.variables = variables.copy()
         elif isinstance(variables, CodeSection):
-            self.variables = variables.variables
+            self.variables = variables.variables.copy()
         else:
             raise ValueError
+            
     @staticmethod
     def write_imports(imports):
         code = ""
@@ -160,6 +217,6 @@ class CodeSection(Template):
         required_input = self.require_input(inputSection)
         if required_input:
             inputSection = inputSection.set_output(required_input)
-        return inputSection
+        self.set_variables(inputSection)
     
         

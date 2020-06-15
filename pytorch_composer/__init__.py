@@ -1,7 +1,5 @@
 from .Classifier import Classifier
-from pytorch_composer.CodeSection import CodeSection
-import math
-import numpy as np
+from pytorch_composer.CodeSection import CodeSection, SettingsDict
 from collections import Counter, defaultdict
 
 from .Layer import Layer
@@ -182,18 +180,25 @@ class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
     def __init__(self, sequence, data):
-        super().__init__(data)
-        self.defaults = {"model_name": "Net"}
-        self.imports = set((
+        self.sequence = sequence
+        defaults = {"model_name": "Net"}
+        imports = set((
             "torch",
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        self.block = Block.create(sequence,self.variables)
-        self.variables = self.block.variables
+        super().__init__(data, defaults = defaults, imports = imports)
 
     def set_default_variables(self):
         self.variables.add_variable("x",[4, 3, 32, 32],0)
+        
+    def set_variables(self, variables):
+        super().set_variables(variables)
+        self.read_sequence(self.sequence)
+        
+    def read_sequence(self, sequence):
+        self.block = Block.create(sequence,self.variables)
+        self.variables = self.block.variables
         
     @property
     def template(self):
@@ -204,20 +209,17 @@ class Model(CodeSection):
             self.block = self.block.update("Reshape", output_dim)
             self.block.code = self.block.parsed_code
         return self
-
-
+    
 class Code:
     def __init__(self, code_sections):
         self.sections = code_sections
-        # Starting from the end of the list, each section can request an output size 
-        # from the previous section. 
+        for section in self.sections:
+            section.linked_to = self
         if len(self.sections) > 1:
             for i in range(len(self.sections))[1:]:
-                self.sections[i-1] = self.sections[i].fit(self.sections[i-1])
-                self.sections[i].set_variables(self.sections[i-1])
+                self.sections[i].fit(self.sections[i-1])
                        
-    @property
-    def str_(self):
+    def __str__(self):
         # Combining all code sections into a string:
         imports = set()
         code = ""
@@ -226,11 +228,57 @@ class Code:
             code += section.code
         return CodeSection.write_imports(imports) + "\n" + code
 
-    def __str__(self):
-        return self.str_
-
     def __repr__(self):
-        return self.str_
+        return self.__str__()
+    
+    def __len__(self):
+        return len(self.sections)
+    
+    def __setitem__(self, key, item):
+        if isinstance(key, int):
+            self.sections[key] = item
+        elif isinstance(key, str):
+            self.check_if_found(key)
+            for section in self.sections:
+                section._update({key:item})
+        self.update()
+                
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.sections[key]
+        elif isinstance(key, str):
+            return self.settings[key]
+        else:
+            raise TypeError
+            
+    @property
+    def settings(self):
+        all_settings = {}
+        for section in self.sections:
+            all_settings.update(section.settings)
+        return SettingsDict(all_settings, self)
+    
+    def fit_all(self):
+        if len(self.sections) > 1:
+            for i in range(len(self))[1:]:
+                self.sections[i].fit(self.sections[i-1])        
+    
+    def check_if_found(self, settings):
+        if isinstance(settings, dict):
+            settings = settings.keys()
+        elif isinstance(settings,str):
+            settings = [settings]
+        not_found = set(settings) - set(self.settings.keys())
+        if not_found:
+            raise KeyError("Settings not found: {}".format(not_found))
+    
+    def update(self, settings = None):
+        # Refits and updates in-place
+        if settings:
+            self.check_if_found(settings)
+            for section in self.sections:
+                section._update(settings)
+        self.fit_all()
 
     def save(self, file_name="train.py"):
         with open(file_name, "w") as f:

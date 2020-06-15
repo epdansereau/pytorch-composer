@@ -3,11 +3,10 @@ from collections import defaultdict
 
 
 class Classifier(CodeSection):
-    def __init__(self, data):
-        super().__init__(data)
-        self._template = '''
+    def __init__(self, data, settings = None):
+        template = '''
 # Define a Loss function and optimizer
-net = Net()
+net = ${model_name}()
 criterion = nn.${criterion}()
 optimizer = optim.${optimizer}(net.parameters(), lr=${lr}, momentum=${momentum})
 
@@ -31,29 +30,34 @@ ${hidden_init}
 ${hidden_copy}
         # print statistics
         running_loss += loss.item()
-        if i % 2000 == 1999:    # print every 2000 mini-batches
+        if i % ${print_every} == ${print_every} - 1:    # print every ${print_every} mini-batches
             print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
+                  (epoch + 1, i + 1, running_loss / ${print_every}))
             running_loss = 0.0
 ${debug1}
-        torch.save(net.state_dict(), 'model.pt')
+        torch.save(net.state_dict(), '${saving_path}')
 
 print('Finished Training')
 '''
 
-        self.defaults = {
+        defaults = {
             "criterion": "CrossEntropyLoss",
             "optimizer": "SGD",
             "lr": 0.001,
             "momentum": 0.9,
             "epoch": 2,
+            "print_every":2000,
+            "model_name": "Net",
+            "saving_path":"model.pt"
         }
         
-        self.imports = set((
+        imports = set((
             "torch",
             "torch.optim as optim",
             "torch.nn as nn",
-        ))        
+        ))   
+        super().__init__(data, settings, defaults, template, imports)
+     
 
     @property
     def active_settings(self):
@@ -70,9 +74,10 @@ print('Finished Training')
                 for var in hidden_vars:
                     settings["hidden_copy"] += " " * \
                         8 + f"{var} = {var}.data\n"
+                        
         return settings
             
         
     def require_input(self, input_ = None):
-        return self.variables["y"][0].dim
+        return input_.variables["y"][0].dim
 
