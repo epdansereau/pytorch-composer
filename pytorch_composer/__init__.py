@@ -258,6 +258,12 @@ class Code:
             all_settings.update(section.settings)
         return SettingsDict(all_settings, self)
     
+    @settings.setter
+    def settings(self, settings):
+        for section in self.sections:
+            section.settings = {}
+        self.update(settings)
+    
     def fit_all(self):
         if len(self.sections) > 1:
             for i in range(len(self))[1:]:

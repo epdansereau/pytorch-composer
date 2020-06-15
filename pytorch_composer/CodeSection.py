@@ -140,8 +140,7 @@ class CodeSection(Template):
     def settings(self, settings):
         if not isinstance(settings, dict):
             raise TypeError
-        self.entered_settings = settings
-        self.update()
+        self.update(settings)
     
     @property
     def active_settings(self):
