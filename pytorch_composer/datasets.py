@@ -18,9 +18,6 @@ testset = torchvision.datasets.CIFAR10(root='${root}', train=False,
                                        download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
                                          shuffle=False, num_workers=${num_workers})
-
-classes = ('plane', 'car', 'bird', 'cat',
-           'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 '''
         defaults = {
             "batch_size":4,
@@ -43,6 +40,6 @@ classes = ('plane', 'car', 'bird', 'cat',
     def set_variables(self, _):
         super().set_variables(None)
         self.variables.add_variable("x",[self["batch_size"],3,32,32],0)
-        self.variables.add_variable("y",[self["batch_size"],10],0)
+        self.variables.add_variable("y",[self["batch_size"]],0,10)
         
 

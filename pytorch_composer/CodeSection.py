@@ -3,10 +3,11 @@ from collections import defaultdict
 import copy
 
 class Variable:
-    def __init__(self, name, dim, batch_rank):
+    def __init__(self, name, dim, batch_rank = 0, classes = None):
         self.name = name
         self.dim = dim
         self.batch_rank = batch_rank
+        self.classes = classes
         
     def __repr__(self):
         return str(tuple([self.name,self.dim,self.batch_rank]))
@@ -44,9 +45,9 @@ class Vars:
     
     # Common operations:
     
-    def add_variable(self, type_, dim, batch_rank):
+    def add_variable(self, type_, dim, batch_rank, classes = None):
         name = type_ + str(len(self[type_]))
-        self[type_].append(Variable(name, dim, batch_rank))     
+        self[type_].append(Variable(name, dim, batch_rank, classes))     
     
     def update_dim(self, type_, ind, new_dim):
         self[type_][ind].dim = new_dim

@@ -79,5 +79,5 @@ print('Finished Training')
             
         
     def require_input(self, input_ = None):
-        return input_.variables["y"][0].dim
+        return input_.variables["y"][0].dim + [input_.variables["y"][0].classes]
 
