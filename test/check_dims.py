@@ -88,11 +88,9 @@ def number_lines(code):
 
 def test(sequence):
     ''' The accuracy should always be 100% '''
-    dataset = pytorch_composer.datasets.CIFAR10()
+    dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
-    loop = Classifier(model,{
-        "debug1":"        if i == 1:\n            break"
-    })
+    loop = Classifier(model)
     print("Output:")
     print(model)
     print()

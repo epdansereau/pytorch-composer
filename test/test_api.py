@@ -17,13 +17,12 @@ sequence = [
     ["Relu"],
 ]
 
-dataset = pytorch_composer.datasets.CIFAR10()
+dataset = pytorch_composer.datasets.RandDataset()
 model = pytorch_composer.Model(sequence, dataset)
 loop = Classifier(model)
 
 code = pytorch_composer.Code([dataset, model, loop])
 
-code[2].entered_settings["debug1"] = "        if i == 2:\n            break"
 
 def check(code, batch_size):
     assert code["batch_size"] == batch_size
