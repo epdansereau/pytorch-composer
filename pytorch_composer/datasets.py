@@ -107,8 +107,19 @@ class AG_NEWS(CodeSection):
 root = ${root}
 if not os.path.exists(root):
     os.makedirs(root)
-    
-trainset, testset = text_classification.DATASETS["AG_NEWS"](root=root)
+
+train_data_path = root / "AG_NEWS_trainNgram1.data"
+test_data_path = root / "AG_NEWS_testNgram1.data"
+
+if train_data_path.exists() and test_data_path.exists():
+    trainset = torch.load(train_data_path)
+    testset = torch.load(test_data_path)
+else:
+    trainset, testset = text_classification.DATASETS["AG_NEWS"](root=root)
+    print("Saving train data to {}".format(train_data_path))
+    torch.save(trainset, train_data_path)
+    print("Saving test data to {}".format(test_data_path))
+    torch.save(testset, test_data_path)
 
 def generate_batch(batch):
     sequence_length = ${sequence_length}
