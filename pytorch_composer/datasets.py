@@ -1,5 +1,8 @@
 from pytorch_composer.CodeSection import CodeSection
 
+ROOT = "Path.home() / '.pyt-comp-data'"
+NUM_WORKERS = 0
+
 # == Vision datasets ==
 
 class CIFAR10(CodeSection):
@@ -9,27 +12,33 @@ class CIFAR10(CodeSection):
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+     
+root = ${root}
+if not os.path.exists(root):
+    os.makedirs(root)
 
-trainset = torchvision.datasets.CIFAR10(root='${root}', train=True,
+trainset = torchvision.datasets.CIFAR10(root=root, train=True,
                                         download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=${batch_size},
                                           shuffle=True, num_workers=${num_workers})
 
-testset = torchvision.datasets.CIFAR10(root='${root}', train=False,
+testset = torchvision.datasets.CIFAR10(root=root, train=False,
                                        download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
                                          shuffle=False, num_workers=${num_workers})
 '''
         defaults = {
             "batch_size":4,
-            "num_workers":2,
-            "root":"./data"
+            "num_workers":NUM_WORKERS,
+            "root":ROOT
         }
         
         imports = set((
             "torch",
             "torchvision",
-            "torchvision.transforms as transforms"
+            "torchvision.transforms as transforms",
+            ("pathlib", "Path"),
+            "os",
         ))
         super().__init__(None, settings, defaults, template, imports)
         
@@ -49,27 +58,33 @@ class MNIST(CodeSection):
 # Load and normalize the dataset
 transform = transforms.Compose(
     [transforms.ToTensor()])
+    
+root = ${root}
+if not os.path.exists(root):
+    os.makedirs(root)
 
-trainset = torchvision.datasets.MNIST(root='${root}', train=True,
+trainset = torchvision.datasets.MNIST(root=root, train=True,
                                         download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=${batch_size},
                                           shuffle=True, num_workers=${num_workers})
 
-testset = torchvision.datasets.MNIST(root='${root}', train=False,
+testset = torchvision.datasets.MNIST(root=root, train=False,
                                        download=True, transform=transform)
 testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
                                          shuffle=False, num_workers=${num_workers})
 '''
         defaults = {
             "batch_size":4,
-            "num_workers":2,
-            "root":"./data"
+            "num_workers":NUM_WORKERS,
+            "root":ROOT
         }
         
         imports = set((
             "torch",
             "torchvision",
-            "torchvision.transforms as transforms"
+            "torchvision.transforms as transforms",
+            ("pathlib", "Path"),
+            "os",
         ))
         super().__init__(None, settings, defaults, template, imports)
         
@@ -88,7 +103,12 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
 class AG_NEWS(CodeSection):
     def __init__(self, settings = None):
         template = '''
-trainset, testset = text_classification.DATASETS["AG_NEWS"](root='${root}')
+        
+root = ${root}
+if not os.path.exists(root):
+    os.makedirs(root)
+    
+trainset, testset = text_classification.DATASETS["AG_NEWS"](root=root)
 
 def generate_batch(batch):
     sequence_length = ${sequence_length}
@@ -118,7 +138,7 @@ testloader = DataLoader(
 '''
         defaults = {
             "batch_size":4,
-            "root":"./data",
+            "root":ROOT,
             "sequence_length":200,
             "classes":4,
         }
@@ -126,7 +146,9 @@ testloader = DataLoader(
         imports = set((
             "torch",
             ("torchtext.datasets","text_classification"),
-            ("torch.utils.data","DataLoader")
+            ("torch.utils.data","DataLoader"),
+            ("pathlib", "Path"),
+            "os",
         ))
         self.vocab_size = 95812
         super().__init__(None, settings, defaults, template, imports)
