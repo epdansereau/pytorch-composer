@@ -32,7 +32,7 @@ sequence1 = [
     ["AdaptiveAvgPool2d", 100],
 ]
 sequence2 = [
-    ["Conv2d", 6],
+    ["Embedding", 100],
     ["MaxPool2d", 2],
     ["Linear", 52],
     ["MaxPool2d", 2],
@@ -86,9 +86,12 @@ def number_lines(code):
     return with_number
 
 
-def test(sequence):
+def test(sequence, long = False):
     ''' The accuracy should always be 100% '''
-    dataset = pytorch_composer.datasets.RandDataset()
+    if long:
+        dataset = pytorch_composer.datasets.RandLongDataset()
+    else:
+        dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
     loop = Classifier(model)
     print("Output:")
@@ -133,7 +136,7 @@ print("TEST1")
 test1 = test(sequence1)
 print()
 print("TEST2")
-test2 = test(sequence2)
+test2 = test(sequence2, long = True)
 print()
 print("1:", test1)
 print("2:", test2)

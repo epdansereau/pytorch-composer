@@ -34,7 +34,9 @@ def check(code, batch_size):
     assert code[2].variables["x"][0].dim[0]  == batch_size
     assert code[2].variables["y"][0].dim  == [batch_size]
     assert code[1].variables["x"][0].dim[1] == code[2].variables["y"][0].classes
-    code.execute() 
+    print("asserted " + str(batch_size))
+    code.execute()
+    print("executed " + str(batch_size))
     
 for _ in range(2):    
     code["batch_size"] = 6
