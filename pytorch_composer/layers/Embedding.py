@@ -10,8 +10,8 @@ class Embedding(Layer):
         self.nn = "nn.Embedding"
         self.description = "Embedding layer"
         self.variables = variables
-        self.classes = variables["x"][0].classes
-        if self.classes is None:
+        self.vocab = variables["x"][0].vocab
+        if self.vocab is None:
             raise ValueError("Not supported: the embedding layer has to receive a tensor of int64")
 
         # Arguments:
@@ -36,14 +36,13 @@ class Embedding(Layer):
     # Creating the layer:
 
     def get_valid_args(self, args):
-        args['num_embeddings'] = self.variables["x"][0].classes
+        args['num_embeddings'] = self.vocab.size
         return args
 
     def update_variables(self, args):
         out = self.input_dim.copy()
         out += [args['embedding_dim']]
-        self.variables.update_x(out)
-        self.variables["x"][0].classes = None
+        self.variables.update_x(out,vocab = None)
 
     # Updating the block object:
 

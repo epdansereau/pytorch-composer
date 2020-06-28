@@ -219,7 +219,12 @@ class Embedding(nn.Module):
     def set_variables(self, _):
         super().set_variables(None)
         embed_dim = get_emb_dim(self["embedding"])
-        self.variables.add_variable("x",[self["sequence_length"], self["batch_size"], embed_dim],1)
+        self.variables.add_variable("x",
+                                    [self["sequence_length"], self["batch_size"]],
+                                    1,
+                                    {"embed_dim":embed_dim,
+                                     "weights":"TEXT.vocab.vectors"}
+                                   )
         self.variables.add_variable("y",[self["batch_size"]],0,self["classes"])
         
 class AG_NEWS(CodeSection):

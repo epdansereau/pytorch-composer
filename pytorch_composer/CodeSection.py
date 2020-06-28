@@ -3,11 +3,11 @@ from collections import defaultdict
 import copy
 
 class Variable:
-    def __init__(self, name, dim, batch_rank = 0, classes = None):
+    def __init__(self, name, dim, batch_rank = 0, vocab = None):
         self.name = name
         self.dim = dim
         self.batch_rank = batch_rank
-        self.classes = classes
+        self.vocab = Vocab.create(vocab)
         
     def __repr__(self):
         return str(tuple([self.name,self.dim,self.batch_rank]))
@@ -45,9 +45,9 @@ class Vars:
     
     # Common operations:
     
-    def add_variable(self, type_, dim, batch_rank, classes = None):
+    def add_variable(self, type_, dim, batch_rank, vocab = None):
         name = type_ + str(len(self[type_]))
-        self[type_].append(Variable(name, dim, batch_rank, classes))     
+        self[type_].append(Variable(name, dim, batch_rank, vocab))     
     
     def update_dim(self, type_, ind, new_dim):
         self[type_][ind].dim = new_dim
@@ -55,11 +55,16 @@ class Vars:
     def update_batch_rank(self, type_, ind, new_batch_rank):
         self[type_][ind].batch_rank = new_batch_rank
         
-    def update_x(self,new_dim = None,new_batch_rank = None, ind = 0):
-        if new_dim is not None:
-            self.update_dim("x",ind,new_dim)
-        if new_batch_rank is not None:
-            self.update_batch_rank("x",ind,new_batch_rank)   
+    def update_vocab(self, type_, ind, new_vocab):
+        self[type_][ind].vocab = Vocab.create(new_vocab)
+        
+    def update_x(self,dim = None,batch_rank = None, vocab = None, ind = 0):
+        if dim is not None:
+            self.update_dim("x",ind,dim)
+        if batch_rank is not None:
+            self.update_batch_rank("x",ind,batch_rank)
+        if vocab is not None:
+            self.update_vocab("x",ind,vocab)   
 
 class SettingsDict(dict):
     def __init__(self, dict_, linked_to = None):
@@ -85,6 +90,23 @@ class SettingsDict(dict):
             
     def unlink(self):
         self.linked_to = None
+        
+class Vocab:
+    def __init__(self, size = None, embed_dim = None, weights = None):
+        self.size = size
+        self.embed_dim = embed_dim
+        self.weights = weights
+        
+    @classmethod
+    def create(cls, args):
+        if isinstance(args,int):
+            return cls(args)
+        elif isinstance(args,cls) or args is None:
+            return args
+        elif isinstance(args,dict):
+            return cls(**args)
+        else:
+            raise TypeError
 
 class CodeSection:
     def __init__(self, variables = None, settings = None, defaults = None, template = "", imports = None, linked_to = None):
