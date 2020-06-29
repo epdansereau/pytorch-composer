@@ -51,10 +51,7 @@ class Block():
         # Valid dtype:
 
         if self.vocab is not None:
-            if self.vocab.weights is not None:
-                self.update("PretrainedEmbedding")
-            else:
-                self.update("Embedding",100)
+            self.update("Embedding")
 
         # Main loop:
 
