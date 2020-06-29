@@ -101,24 +101,24 @@ class Layer():
         args = {}
         if dimension_arg is not None:
             args[self.dimension_key] = dimension_arg
-            if self.dimension_key in other_args:
-                if other_args[self.dimension_key] != args[self.dimension_key]:
-                    warnings.warn(
-                        "In {} layer, the argument {} was defined twice. The value in" +
-                        " the argument dictionary will be ignored.".format(
-                            self.layer_type,
-                            self.dimension_key))
-                other_args.pop(self.dimension_key)
-            for arg in other_args:
-                if arg not in self.default_args:
-                    warnings.warn(
-                        "Unknown argument {} in {} layer will be ignored".format(
-                            self.dimension_key, self.layer_type))
-            for arg in self.default_args:
-                if arg in other_args:
-                    args[arg] = other_args[arg]
-                else:
-                    args[arg] = self.default_args[arg]
+        if self.dimension_key in other_args:
+            if other_args[self.dimension_key] != args[self.dimension_key]:
+                warnings.warn(
+                    "In {} layer, the argument {} was defined twice. The value in" +
+                    " the argument dictionary will be ignored.".format(
+                        self.layer_type,
+                        self.dimension_key))
+            other_args.pop(self.dimension_key)
+        for arg in other_args:
+            if arg not in self.default_args:
+                warnings.warn(
+                    "Unknown argument {} in {} layer will be ignored".format(
+                        self.dimension_key, self.layer_type))
+        for arg in self.default_args:
+            if arg in other_args:
+                args[arg] = other_args[arg]
+            else:
+                args[arg] = self.default_args[arg]
         return args
 
     def get_valid_args(self, args):

@@ -46,6 +46,15 @@ class Block():
         self.forward_function = []
         self.variables = variables
         self.input_dim = variables.output_dim.copy()
+        
+        
+        # Valid dtype:
+
+        if self.vocab is not None:
+            if self.vocab.weights is not None:
+                self.update("PretrainedEmbedding")
+            else:
+                self.update("Embedding",100)
 
         # Main loop:
 
@@ -79,6 +88,10 @@ class Block():
     @property
     def batch_rank(self):
         return self.variables.batch_rank
+    
+    @property
+    def vocab(self):
+        return self.variables["x"][0].vocab
 
     @property
     def parsed_code(self):

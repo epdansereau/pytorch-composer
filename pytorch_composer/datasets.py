@@ -150,7 +150,7 @@ class BucketWrapper(data.BucketIterator):
             yield batch.text, batch.label
             
 TEXT = data.Field(sequential=True, tokenize='spacy', lower=True, fix_length = ${sequence_length})
-LABEL = data.Field(sequential=False, use_vocab=False)
+LABEL = data.Field(sequential=False, unk_token = None)
 fields = [("text",TEXT),("label",LABEL)]
             
 train_data_path = root / "train_{}.data".format(dataset_name)
@@ -181,19 +181,10 @@ else:
     test_data = data.Dataset(test_data, fields)
             
 TEXT.build_vocab(train_data, vectors="${embedding}")
+LABEL.build_vocab(train_data)
         
 trainloader = BucketWrapper(train_data,${batch_size})
 testloader = BucketWrapper(test_data,${batch_size})
-
-
-class Embedding(nn.Module):
-    def __init__(self):
-        super(Embedding, self).__init__()
-        self.embedding = nn.Embedding.from_pretrained(TEXT.vocab.vectors)
-        
-    def forward(self, x):
-        x = self.embedding(x)
-        return x
 '''
         defaults = {
             "batch_size":4,

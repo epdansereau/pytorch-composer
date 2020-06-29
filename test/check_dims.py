@@ -32,7 +32,6 @@ sequence1 = [
     ["AdaptiveAvgPool2d", 100],
 ]
 sequence2 = [
-    ["Embedding", 100],
     ["MaxPool2d", 2],
     ["Linear", 52],
     ["MaxPool2d", 2],

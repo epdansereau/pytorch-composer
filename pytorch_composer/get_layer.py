@@ -10,8 +10,10 @@ from .layers import AdaptiveAvgPool1d
 from .layers import AdaptiveAvgPool2d
 from .layers import AdaptiveAvgPool3d
 from .layers import RNN
-from .layers import Embedding
 from .layers import permute
+
+from .layers import Embedding
+from .layers import PretrainedEmbedding
 
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
 # Example:

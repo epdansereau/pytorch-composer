@@ -77,7 +77,7 @@ class RNN(Layer):
 
     def update_block(self, block):
         block.variables.add_variable("h",self.hidden_dim, self.batch_rank)
-        return self.add_hidden_layer(block)
+        self.add_hidden_layer(block)
 
     def add_hidden_layer(self, block):
         hidden_var = self.variables["h"][-1].name
