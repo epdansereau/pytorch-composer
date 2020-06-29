@@ -118,7 +118,7 @@ embeddings = ["charngram.100d",
 def get_emb_dim(embedding):
     return int(embedding.split(".")[-1][:-1])
 
-class _AG_NEWS(CodeSection):
+class AG_NEWS(CodeSection):
     def __init__(self, settings = None):
         template = '''
         
@@ -180,7 +180,7 @@ else:
     torch.save(test_data, test_data_path)
     test_data = data.Dataset(test_data, fields)
             
-TEXT.build_vocab(train_data, vectors="${embedding}")
+TEXT.build_vocab(train_data${set_vectors})
 LABEL.build_vocab(train_data)
         
 trainloader = BucketWrapper(train_data,${batch_size})
@@ -209,84 +209,28 @@ testloader = BucketWrapper(test_data,${batch_size})
         
     def set_variables(self, _):
         super().set_variables(None)
-        embed_dim = get_emb_dim(self["embedding"])
+        if self["embedding"] is None:
+            vocab = {"size":"len(TEXT.vocab)"}
+        else:
+            vocab = {"embed_dim":get_emb_dim(self["embedding"]), "weights":"TEXT.vocab.vectors"}
         self.variables.add_variable("x",
                                     [self["sequence_length"], self["batch_size"]],
                                     1,
-                                    {"embed_dim":embed_dim,
-                                     "weights":"TEXT.vocab.vectors"}
+                                    vocab,
                                    )
         self.variables.add_variable("y",[self["batch_size"]],0,self["classes"])
         
-class AG_NEWS(CodeSection):
-    #to be replaced soon
-    def __init__(self, settings = None):
-        template = '''
-        
-root = ${root}
-if not os.path.exists(root):
-    os.makedirs(root)
+    @property
+    def active_settings(self):
+        if self["embedding"] in embeddings:
+            set_vectors = ', vectors="{}"'.format(self["embedding"])
+        elif self["embedding"] is None:
+            set_vectors = ''
+        else:
+            raise ValueError("Embeddings must be one of: {} or None".format(embeddings))        
+        act_set = {"set_vectors":set_vectors}
+        return {**self.settings, **act_set}
 
-train_data_path = root / "AG_NEWS_trainNgram1.data"
-test_data_path = root / "AG_NEWS_testNgram1.data"
-
-if train_data_path.exists() and test_data_path.exists():
-    trainset = torch.load(train_data_path)
-    testset = torch.load(test_data_path)
-else:
-    trainset, testset = text_classification.DATASETS["AG_NEWS"](root=root)
-    print("Saving train data to {}".format(train_data_path))
-    torch.save(trainset, train_data_path)
-    print("Saving test data to {}".format(test_data_path))
-    torch.save(testset, test_data_path)
-
-def generate_batch(batch):
-    sequence_length = ${sequence_length}
-    pad_token = 0
-    
-    input_ids = []
-    labels = []
-    
-    for sequence in batch:
-        input_id = sequence[1][:sequence_length]
-        input_id = torch.cat((input_id, torch.zeros(sequence_length - len(input_id),dtype = torch.int64)))
-        input_ids.append(input_id)
-        labels.append(sequence[0])
-    return torch.stack(input_ids).long(), torch.IntTensor(labels).long()
-    
-trainloader = DataLoader(
-    trainset,
-    batch_size=${batch_size},
-    collate_fn=generate_batch,
-    pin_memory=True)
-    
-testloader = DataLoader(
-    testset,
-    batch_size=${batch_size},
-    collate_fn=generate_batch,
-    pin_memory=True)    
-'''
-        defaults = {
-            "batch_size":4,
-            "root":ROOT,
-            "sequence_length":200,
-            "classes":4,
-        }
-        
-        imports = set((
-            "torch",
-            ("torchtext.datasets","text_classification"),
-            ("torch.utils.data","DataLoader"),
-            ("pathlib", "Path"),
-            "os",
-        ))
-        self.vocab_size = 95812
-        super().__init__(None, settings, defaults, template, imports)
-        
-    def set_variables(self, _):
-        super().set_variables(None)
-        self.variables.add_variable("x",[self["batch_size"],self["sequence_length"]],0,self.vocab_size)
-        self.variables.add_variable("y",[self["batch_size"]],0,self["classes"])
 
 # == Debugging datasets ==
 
