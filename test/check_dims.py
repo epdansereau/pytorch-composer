@@ -1,7 +1,7 @@
 # Tests if the dimensions claimed by the comments of the generated code
 # are the same as the real dimensions
 
-from pytorch_composer.Classifier import Classifier
+from pytorch_composer.loops import Loop
 import pytorch_composer.datasets
 import traceback
 
@@ -92,7 +92,7 @@ def test(sequence, long = False):
     else:
         dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
-    loop = Classifier(model)
+    loop = Loop(model)
     print("Output:")
     print(model)
     print()

@@ -2,7 +2,7 @@ from pytorch_composer.CodeSection import CodeSection
 from collections import defaultdict
 
 
-class Classifier(CodeSection):
+class Loop(CodeSection):
     def __init__(self, data, settings = None):
         template = '''
 # Define a Loss function and optimizer

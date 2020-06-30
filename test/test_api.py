@@ -1,6 +1,6 @@
 import pytorch_composer
 import pytorch_composer.datasets
-from pytorch_composer.Classifier import Classifier
+from pytorch_composer.loops import Loop
 
 
 sequence = [
@@ -19,7 +19,7 @@ sequence = [
 
 dataset = pytorch_composer.datasets.RandDataset()
 model = pytorch_composer.Model(sequence, dataset)
-loop = Classifier(model)
+loop = Loop(model)
 
 code = pytorch_composer.Code([dataset, model, loop])
 
