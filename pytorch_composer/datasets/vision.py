@@ -39,6 +39,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
             ("pathlib", "Path"),
             "os",
         ))
+        self.classes = ['plane', 'car', 'bird', 'cat',
+           'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
         super().__init__(None, settings, defaults, template, imports)
         
     def setitem(self, key, item):
@@ -49,7 +51,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
     def set_variables(self, _):
         super().set_variables(None)
         self.variables.add_variable("x",[self["batch_size"],3,32,32],0)
-        self.variables.add_variable("y",[self["batch_size"]],0,10)
+        self.variables.add_variable("y",[self["batch_size"]],0,self.classes)
         
 class MNIST(CodeSection):
     def __init__(self, settings = None):
@@ -85,6 +87,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
             ("pathlib", "Path"),
             "os",
         ))
+        self.classes = [x for x in range(10)]
         super().__init__(None, settings, defaults, template, imports)
         
     def setitem(self, key, item):
@@ -95,5 +98,5 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
     def set_variables(self, _):
         super().set_variables(None)
         self.variables.add_variable("x",[self["batch_size"],1,28,28],0)
-        self.variables.add_variable("y",[self["batch_size"]],0,10)
+        self.variables.add_variable("y",[self["batch_size"]],0,self.classes)
         

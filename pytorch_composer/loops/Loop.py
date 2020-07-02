@@ -80,4 +80,16 @@ print('Finished Training')
         
     def require_input(self, input_ = None):
         return input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
+    
+'''
+-> return input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
+(Pdb) ["x"][0].dim
+*** AttributeError: 'str' object has no attribute 'dim'
+(Pdb) input_.variables["x"][0].dim
+[4, 38]
+(Pdb) input_.variables["y"][0].dim
+[4]
+(Pdb) input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
+[4, 4]
+'''
 

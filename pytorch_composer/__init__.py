@@ -186,8 +186,15 @@ class Model(CodeSection):
         return str(self.block)
 
     def set_output(self, output_dim):
+        # This only partially works and has to be reworked.
+        vocab = None
+        if isinstance(output_dim[-1],str):
+            vocab = output_dim[-1]
+            output_dim[-1] = -1
         if output_dim is not self.block.output_dim:
             self.block.update("Reshape", output_dim)
+            if vocab is not None:
+                self.block.update("Linear", vocab)
             self.block.code = self.block.parsed_code
         return self
     

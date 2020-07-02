@@ -55,7 +55,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size}, shuf
     def set_variables(self, _):
         super().set_variables(None)
         self.variables.add_variable("x",[self["batch_size"],*self["shape"]],0)
-        self.variables.add_variable("y",[self["batch_size"]],0,self["classes"])
+        self.variables.add_variable("y",[self["batch_size"]],0,[x for x in range(self["classes"])])
         
 class RandLongDataset(CodeSection):
     def __init__(self, settings = None):
@@ -107,7 +107,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size}, shuf
     
     def set_variables(self, _):
         super().set_variables(None)
-        self.variables.add_variable("x",[self["batch_size"],*self["shape"]],0,self["range"])
-        self.variables.add_variable("y",[self["batch_size"]],0,self["classes"]) 
+        self.variables.add_variable("x",[self["batch_size"],*self["shape"]],0,[x for x in range(self["range"])])
+        self.variables.add_variable("y",[self["batch_size"]],0,[x for x in range(self["range"])]) 
         
 

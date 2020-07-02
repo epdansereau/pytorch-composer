@@ -92,14 +92,17 @@ class SettingsDict(dict):
         self.linked_to = None
         
 class Vocab:
-    def __init__(self, size = None, embed_dim = None, weights = None):
+    def __init__(self, classes = None, size = None, embed_dim = None, weights = None):
         self.size = size
+        self.classes = classes
+        if classes is not None and size is None:
+            self.size = len(classes)
         self.embed_dim = embed_dim
         self.weights = weights
         
     @classmethod
     def create(cls, args):
-        if isinstance(args,int):
+        if isinstance(args,list):
             return cls(args)
         elif isinstance(args,cls) or args is None:
             return args

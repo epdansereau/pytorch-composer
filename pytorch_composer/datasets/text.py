@@ -109,6 +109,7 @@ testloader = BucketWrapper(test_data,${batch_size})
             "torch",
             ("torch","nn"),
         ))
+        self.classes = ["World","Sports","Business","Sci/Tech"]
         super().__init__(None, settings, defaults, template, imports)
         
     def set_variables(self, _):
@@ -122,7 +123,7 @@ testloader = BucketWrapper(test_data,${batch_size})
                                     1,
                                     vocab,
                                    )
-        self.variables.add_variable("y",[self["batch_size"]],0,self["classes"])
+        self.variables.add_variable("y",[self["batch_size"]],0,self.classes)
         
     @property
     def active_settings(self):
@@ -134,5 +135,112 @@ testloader = BucketWrapper(test_data,${batch_size})
             raise ValueError("Embeddings must be one of: {} or None".format(embeddings))        
         act_set = {"set_vectors":set_vectors}
         return {**self.settings, **act_set}
+
+
+    
+class WikiText2(CodeSection):
+    def __init__(self, settings = None):
+        template = '''
+        
+root = ${root}
+if not os.path.exists(root):
+    os.makedirs(root)
+
+import torch
+import torch.nn as nn
+import torchtext
+from torchtext.data.utils import get_tokenizer
+TEXT = torchtext.data.Field(tokenize=get_tokenizer("basic_english"),
+                            init_token='<sos>',
+                            eos_token='<eos>',
+                            lower=True)
+train_txt, val_txt, test_txt = torchtext.datasets.WikiText2.splits(TEXT)
+TEXT.build_vocab(train_txt${set_vectors})
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+def batchify(data, bsz):
+    data = TEXT.numericalize([data.examples[0].text])
+    # Divide the dataset into bsz parts.
+    nbatch = data.size(0) // bsz
+    # Trim off any extra elements that wouldn't cleanly fit (remainders).
+    data = data.narrow(0, 0, nbatch * bsz)
+    # Evenly divide the data across the bsz batches.
+    data = data.view(bsz, -1).t().contiguous()
+    return data.to(device)
+
+
+bptt = ${bptt}
+
+
+
+class Loader:
+    def __init__(self, source):
+        self.source = source
+        self.nbatch = self.source.size(0) // batch_size
+        
+    def __iter__(self):
+        for i in range(self.nbatch):
+            yield self.get_batch(i)
+            
+    def get_batch(self, i):
+        seq_len = min(bptt, len(self.source) - 1 - i)
+        data = self.source[i:i+seq_len]
+        target = self.source[i+1:i+1+seq_len].view(-1)
+        return data, target
+    
+batch_size = ${batch_size}
+eval_batch_size = 10
+trainloader = Loader(batchify(train_txt, batch_size))
+valloader = Loader(batchify(val_txt, eval_batch_size))
+testloader = Loader(batchify(test_txt, eval_batch_size))
+
+'''
+        defaults = {
+            "batch_size":20,
+            "bptt":35,
+            "root":ROOT,
+            "embedding":"glove.6B.100d",
+        }
+        
+        imports = set((
+            ("tqdm", "tqdm"),
+            ("pathlib", "Path"),
+            "os",
+            "torch",
+            "torch.nn as nn",
+            "torchtext",
+            ("torchtext.data.utils", "get_tokenizer")
+        ))
+        super().__init__(None, settings, defaults, template, imports)
+        
+    def set_variables(self, _):
+        super().set_variables(None)
+        if self["embedding"] is None:
+            vocab = {"size":"len(TEXT.vocab)"}
+        else:
+            vocab = {"size":"len(TEXT.vocab)","embed_dim":get_emb_dim(self["embedding"]), "weights":"TEXT.vocab.vectors"}
+        self.variables.add_variable("x",
+                                    [self["bptt"], self["batch_size"]],
+                                    1,
+                                    vocab,
+                                   )
+        self.variables.add_variable("y",
+                                    [self["bptt"]*self["batch_size"]],
+                                    1,
+                                    vocab,
+                                   )
+    @property
+    def active_settings(self):
+        if self["embedding"] in embeddings:
+            set_vectors = ', vectors="{}"'.format(self["embedding"])
+        elif self["embedding"] is None:
+            set_vectors = ''
+        else:
+            raise ValueError("Embeddings must be one of: {} or None".format(embeddings))        
+        act_set = {"set_vectors":set_vectors}
+        return {**self.settings, **act_set}
+
+
+
 
 
