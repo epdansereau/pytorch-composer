@@ -146,10 +146,6 @@ root = ${root}
 if not os.path.exists(root):
     os.makedirs(root)
 
-import torch
-import torch.nn as nn
-import torchtext
-from torchtext.data.utils import get_tokenizer
 TEXT = torchtext.data.Field(tokenize=get_tokenizer("basic_english"),
                             init_token='<sos>',
                             eos_token='<eos>',
@@ -239,6 +235,81 @@ testloader = Loader(batchify(test_txt, eval_batch_size))
             raise ValueError("Embeddings must be one of: {} or None".format(embeddings))        
         act_set = {"set_vectors":set_vectors}
         return {**self.settings, **act_set}
+    
+class Multi30k(CodeSection):
+    #TD: Embeddings
+    
+    
+    def __init__(self, settings = None):
+        template = '''
+        
+SRC = Field(tokenize = "spacy",
+            tokenizer_language="de",
+            init_token = '<sos>',
+            eos_token = '<eos>',
+            lower = True,
+            fix_length = ${length})
+
+TRG = Field(tokenize = "spacy",
+            tokenizer_language="en",
+            init_token = '<sos>',
+            eos_token = '<eos>',
+            lower = True,
+            fix_length = ${length})
+
+train_data, valid_data, test_data = Multi30k.splits(exts = ('.de', '.en'),
+                                                    fields = (SRC, TRG))
+
+SRC.build_vocab(train_data, min_freq = ${min_freq})
+TRG.build_vocab(train_data, min_freq = ${min_freq})
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+BATCH_SIZE = ${batch_size}
+
+class IteratorWrapper(BucketIterator):
+    def __iter__(self):
+        for batch in super().__iter__():
+            yield batch.src, batch.trg.view(-1)
+
+trainloader, valid_iterator, testloader = IteratorWrapper.splits(
+    (train_data, valid_data, test_data),
+    batch_size = BATCH_SIZE,
+    device = device)
+
+'''
+
+        defaults = {
+            "batch_size":128,
+            "length":50,
+            "min_freq":2,
+        }
+        
+        imports = set((
+            ("tqdm", "tqdm"),
+            ("pathlib", "Path"),
+            "os",
+            "torch",
+            ("torchtext.data", "Field, BucketIterator"),
+            ("torchtext.datasets", "Multi30k")
+        ))
+        super().__init__(None, settings, defaults, template, imports)
+        
+    def set_variables(self, _):
+        super().set_variables(None)
+        vocab1 = {"size":"len(SRC.vocab)"}
+        vocab2 = {"size":"len(TRG.vocab)"}
+        self.variables.add_variable("x",
+                                    [self["length"], self["batch_size"]],
+                                    1,
+                                    vocab1,
+                                   )
+        self.variables.add_variable("y",
+                                    [self["length"]*self["batch_size"]],
+                                    1,
+                                    vocab2,
+                                   )
+
 
 
 
