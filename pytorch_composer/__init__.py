@@ -245,7 +245,8 @@ class Code:
         if self[-1].returns is None:
             return None
         else:
-            variables = [env[v] for v in self[-1].returns]
+            variables = tuple([env[v] for v in self[-1].returns])
+            return variables
             
     @property
     def settings(self):
