@@ -112,7 +112,15 @@ class Vocab:
             raise TypeError
 
 class CodeSection:
-    def __init__(self, variables = None, settings = None, defaults = None, template = "", imports = None, linked_to = None):
+    def __init__(self,
+                 variables = None,
+                 settings = None,
+                 defaults = None,
+                 template = "",
+                 imports = None,
+                 linked_to = None,
+                 returns = None,
+                ):
         self._template = template
         if imports is None:
             self.imports = set()
@@ -125,7 +133,8 @@ class CodeSection:
         self.defaults = defaults
         self.entered_settings = settings
         self.set_variables(variables)
-        self.linked_to = None
+        self.linked_to = linked_to
+        self.returns = returns
         
     def setitem(self, key, item):
         self.entered_settings[key] = item

@@ -239,6 +239,14 @@ class Code:
         else:
             raise TypeError
             
+    def __call__(self):
+        env = {}
+        exec(str(self), env)
+        if self[-1].returns is None:
+            return None
+        else:
+            variables = [env[v] for v in self[-1].returns]
+            
     @property
     def settings(self):
         all_settings = {}
@@ -277,6 +285,3 @@ class Code:
     def save(self, file_name="train.py"):
         with open(file_name, "w") as f:
             f.write(str(self))
-
-    def execute(self):
-        exec(str(self), globals(), globals())
