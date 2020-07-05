@@ -1,6 +1,10 @@
 from string import Template, Formatter
 from collections import defaultdict
 import copy
+import sys
+import traceback
+from traceback import TracebackException
+import ast
 
 class Variable:
     def __init__(self, name, dim, batch_rank = 0, vocab = None):
@@ -111,6 +115,22 @@ class Vocab:
         else:
             raise TypeError
 
+class ComposerError(Exception):
+    @staticmethod
+    def _show_lines(selected_line, str_):
+        '''Prints selected numbered lines from a string. '''
+        all_lines = str_.splitlines() # empty string to start index at 1
+        shown_lines = []
+        lines_printed = min(5,len(all_lines))
+        start_from = max(0,selected_line - 3)
+        for line_number in range(start_from, start_from + lines_printed):
+            if line_number + 1 == selected_line:
+                sep = " -> "
+            else:
+                sep = "    "
+            shown_lines.append(str(line_number + 1).rjust(3) + sep + all_lines[line_number].rstrip())       
+        return "\n".join(shown_lines)
+            
 class CodeSection:
     def __init__(self,
                  variables = None,
@@ -154,6 +174,42 @@ class CodeSection:
     
     def __repr__(self):
         return self.str_
+    
+    @staticmethod
+    def execute(code_source, inputs = None, returns = None):
+        env = {}
+        code_source = str(code_source)
+        assert isinstance(code_source,str)
+        parsed = ast.parse(code_source)
+        code = compile(parsed, 'ComposerExec','exec')
+        try:
+            exec(code, env)
+        except Exception as error:
+            error_class = error.__class__.__name__
+            if len(error.args):
+                detail = error.args[0]
+            else:
+                detail = None
+            _, _, tb_ = sys.exc_info()
+            tb = traceback.extract_tb(tb_)
+            trace_string = ""
+            for frame in tb:
+                trace_string += traceback.format_list([frame])[0]
+                if frame.filename == 'ComposerExec':
+                    line_number = frame.lineno
+                    trace_string += "    " + code_source.splitlines()[line_number - 1] + "\n"
+        else:
+            if returns is None:
+                return None
+            else:
+                variables = [env[v] for v in returns]
+                if len(variables) == 1:
+                    return variables[0]
+                else:
+                    return variables
+        lines = ComposerError._show_lines(line_number,code_source)
+        error_msg = f"{error_class} was raised at line {line_number} : {detail}\n{lines}\n\nTraceback:\n{trace_string}"
+        raise ComposerError(error_msg)
         
     @property
     def template(self):

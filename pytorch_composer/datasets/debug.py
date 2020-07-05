@@ -1,10 +1,10 @@
-from pytorch_composer.CodeSection import CodeSection
+from pytorch_composer.Dataset import Dataset
 
 ROOT = "Path.home() / '.pyt-comp-data'"
 NUM_WORKERS = 0
 
 
-class RandDataset(CodeSection):
+class RandDataset(Dataset):
     def __init__(self, settings = None):
         template = '''
 # Tensor with random values
@@ -57,7 +57,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size}, shuf
         self.variables.add_variable("x",[self["batch_size"],*self["shape"]],0)
         self.variables.add_variable("y",[self["batch_size"]],0,[x for x in range(self["classes"])])
         
-class RandLongDataset(CodeSection):
+class RandLongDataset(Dataset):
     def __init__(self, settings = None):
         template = '''
 # Tensor with random values

@@ -1,10 +1,10 @@
-from pytorch_composer.CodeSection import CodeSection
+from pytorch_composer.Dataset import Dataset
 
 ROOT = "Path.home() / '.pyt-comp-data'"
 NUM_WORKERS = 0
 
 
-class CIFAR10(CodeSection):
+class CIFAR10(Dataset):
     def __init__(self, settings = None):
         template = '''
 # Load and normalize the dataset
@@ -53,7 +53,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=${batch_size},
         self.variables.add_variable("x",[self["batch_size"],3,32,32],0)
         self.variables.add_variable("y",[self["batch_size"]],0,self.classes)
         
-class MNIST(CodeSection):
+class MNIST(Dataset):
     def __init__(self, settings = None):
         template = '''
 # Load and normalize the dataset

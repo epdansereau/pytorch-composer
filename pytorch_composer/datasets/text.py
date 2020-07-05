@@ -1,4 +1,4 @@
-from pytorch_composer.CodeSection import CodeSection
+from pytorch_composer.Dataset import Dataset
 
 ROOT = "Path.home() / '.pyt-comp-data'"
 NUM_WORKERS = 0
@@ -22,7 +22,7 @@ embeddings = ["charngram.100d",
 def get_emb_dim(embedding):
     return int(embedding.split(".")[-1][:-1])
 
-class AG_NEWS(CodeSection):
+class AG_NEWS(Dataset):
     def __init__(self, settings = None):
         template = '''
         
@@ -138,7 +138,7 @@ testloader = BucketWrapper(test_data,${batch_size})
 
 
     
-class WikiText2(CodeSection):
+class WikiText2(Dataset):
     def __init__(self, settings = None):
         template = '''
         
@@ -236,7 +236,7 @@ testloader = Loader(batchify(test_txt, eval_batch_size))
         act_set = {"set_vectors":set_vectors}
         return {**self.settings, **act_set}
     
-class Multi30k(CodeSection):
+class Multi30k(Dataset):
     #TD: Embeddings
     
     

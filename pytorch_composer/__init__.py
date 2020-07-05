@@ -171,7 +171,8 @@ class Model(CodeSection):
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        super().__init__(data, defaults = defaults, imports = imports)
+        returns = ["output"]
+        super().__init__(data, defaults = defaults, imports = imports, returns = returns)
 
     def set_default_variables(self):
         self.variables.add_variable("x",[4, 3, 32, 32],0)
