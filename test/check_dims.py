@@ -98,27 +98,18 @@ def test(sequence, long = False):
     print()
     print("Dimension test:")
     debug_code = '''
-global test_result
 test_result = {}
-
 
 '''
     code = pytorch_composer.Code([dataset, model, loop])
     # adding test code:
     code[0].template = debug_code + code[0].template
     code[1].block.code = add_dims_check(code[1].block.code)
+    code[-1].returns = ["test_result"]
     print(code)
-    try:
-        exec(str(code), globals(), globals())
-    except Exception as error:
-        print()
-        print(number_lines(code))
-        print()
-        print("The test above failed to execute:")
-        traceback.print_exc()
-    # passing test results from globals
-    correct = 0
+    test_result = code()
 
+    correct = 0
     for line in test_result:
         if test_result[line][0] == test_result[line][1]:
             print(test_result[line])

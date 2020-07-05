@@ -3,6 +3,9 @@ from .get_layer import get_layer
 
 from collections import Counter, defaultdict
 
+import sys
+import traceback
+
 
 def parse_entry(entry):
     '''
@@ -198,6 +201,23 @@ class Model(CodeSection):
             self.block.code = self.block.parsed_code
         return self
     
+class ComposerError(Exception):
+    @staticmethod
+    def _show_lines(selected_line, str_):
+        '''Prints selected numbered lines from a string. '''
+        all_lines = str_.splitlines() # empty string to start index at 1
+        shown_lines = []
+        lines_printed = min(5,len(all_lines))
+        start_from = max(0,selected_line - 3)
+        for line_number in range(start_from, start_from + lines_printed):
+            if line_number + 1 == selected_line:
+                sep = " -> "
+            else:
+                sep = "    "
+            shown_lines.append(str(line_number + 1).rjust(3) + sep + all_lines[line_number].rstrip())       
+        return "\n".join(shown_lines)
+
+    
 class Code:
     def __init__(self, code_sections):
         self.sections = code_sections
@@ -241,12 +261,29 @@ class Code:
             
     def __call__(self):
         env = {}
-        exec(str(self), env)
-        if self[-1].returns is None:
-            return None
+        assert isinstance(str(self),str)
+        try:
+            exec(str(self), env)
+        except Exception as error:
+            traceback.format_exc()
+            error_class = error.__class__.__name__
+            if len(error.args):
+                detail = error.args[0]
+            else:
+                detail = None
+            _, _, tb = sys.exc_info()
+            line_number = traceback.extract_tb(tb)[-1][1]
         else:
-            variables = tuple([env[v] for v in self[-1].returns])
-            return variables
+            if self[-1].returns is None:
+                return None
+            else:
+                variables = [env[v] for v in self[-1].returns]
+                if len(variables) == 1:
+                    return variables[0]
+                else:
+                    return variables
+        lines = ComposerError._show_lines(line_number,str(self))
+        raise ComposerError(f"{error_class} was raised at line {line_number} : {detail}\n{lines}")
             
     @property
     def settings(self):
