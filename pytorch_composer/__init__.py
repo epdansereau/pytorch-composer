@@ -182,6 +182,8 @@ class Model(CodeSection):
     def __call__(self, input_ = None, batch_rank = None):
         data_dim = self.parse_data(input_, batch_rank)
         self.set_variables(data_dim)
+        if isinstance(input_, list):
+            input_ = torch.rand(input_)
         env = {"x":input_}
         return self.execute(self.get_batch_code(), self.returns, env)
     
