@@ -128,7 +128,7 @@ class Block():
 
     def update(self, layer_type, dimension_arg=None, other_args=None):
         layer = get_layer(layer_type).create(
-            self.variables, dimension_arg, other_args)
+            dimension_arg, other_args, self.variables)
         layer.update_block(self)
         self.variables = layer.variables
 

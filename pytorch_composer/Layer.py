@@ -1,5 +1,7 @@
 import math
 import warnings
+import pytorch_composer
+from pytorch_composer.CodeSection import Vars
 
 
 class Layer():
@@ -17,6 +19,11 @@ class Layer():
         self.input_dim = variables["x"][0].dim
         self.nn = None
         self.description = None
+        
+    def __call__(self, variables = None, batch_rank = None):
+        layer_model = pytorch_composer.Model([], variables)
+        self.update_block(layer_model.block)
+        return layer_model(variables, batch_rank)
 
     # Main loop:
 
@@ -82,16 +89,26 @@ class Layer():
     # Creating the layer:
 
     @classmethod
-    def create(cls, variables, dimension_arg, other_args):
-        # TBD
+    def create(cls, dimension_arg, other_args = None, variables = None):
         if other_args is None:
             other_args = {}
+        if variables is None:
+            variables = Vars({})
+            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
         layer = cls(variables)
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args)
         layer.update_variables(args)
         layer.args = layer.write_args(args)
         return layer
+    
+    @classmethod
+    def default_dim(self):
+        return [4,3,32,32]
+    
+    @classmethod
+    def default_batch_rank(self):
+        return 0   
 
     def active_args(self, dimension_arg, other_args):
         # Joins the dimension_arg and other_args in the same dict.

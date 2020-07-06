@@ -49,7 +49,7 @@ class Vars:
     
     # Common operations:
     
-    def add_variable(self, type_, dim, batch_rank, vocab = None):
+    def add_variable(self, type_, dim, batch_rank = 0, vocab = None):
         name = type_ + str(len(self[type_]))
         self[type_].append(Variable(name, dim, batch_rank, vocab))     
     

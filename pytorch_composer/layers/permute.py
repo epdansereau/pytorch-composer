@@ -21,7 +21,7 @@ class permute(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, variables, permutation, _):
+    def create(cls, permutation, _, variables):
         layer = cls(variables)
         layer.permutation = permutation
         if len(layer.input_dim) > len(permutation):

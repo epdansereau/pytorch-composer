@@ -49,7 +49,7 @@ class RNN(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, variables, dimension_arg, other_args):
+    def create(cls, dimension_arg, other_args, variables):
         if other_args is None:
             other_args = {}
         layer = cls(variables)

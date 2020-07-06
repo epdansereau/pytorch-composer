@@ -23,7 +23,7 @@ class Reshape(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, variables, dimension_arg, _):
+    def create(cls, dimension_arg, _, variables):
         
         layer = cls(variables)
         res_dims = resizing_args(layer.input_dim, list(dimension_arg))
@@ -37,7 +37,7 @@ class Reshape(Layer):
                 pool = AdaptiveAvgPool2d
             if len(layer.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            layer.pool = pool.create(layer.variables.copy(), tuple(pool_args), None)
+            layer.pool = pool.create(tuple(pool_args), None, layer.variables.copy())
             layer.variables.update_x(out)
         else:
             layer.variables.update_x(res_dims[-1])
