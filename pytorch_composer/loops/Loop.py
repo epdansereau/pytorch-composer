@@ -6,7 +6,6 @@ class Loop(CodeSection):
     def __init__(self, data, settings = None):
         template = '''
 # Define a Loss function and optimizer
-net = ${model_name}()
 criterion = nn.${criterion}()
 optimizer = optim.${optimizer}(net.parameters(), lr=${lr}, momentum=${momentum})
 

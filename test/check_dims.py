@@ -105,9 +105,8 @@ test_result = {}
     # adding test code:
     code[0].template = debug_code + code[0].template
     code[1].block.code = add_dims_check(code[1].block.code)
-    code[-1].returns = ["test_result"]
     print(code)
-    test_result = code()
+    test_result = code(returns = ["test_result"])
 
     correct = 0
     for line in test_result:

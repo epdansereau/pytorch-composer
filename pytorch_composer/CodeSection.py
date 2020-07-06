@@ -122,7 +122,8 @@ class ComposerError(Exception):
         all_lines = str_.splitlines() # empty string to start index at 1
         shown_lines = []
         lines_printed = min(5,len(all_lines))
-        start_from = max(0,selected_line - 3)
+        start_from = min(len(all_lines) - lines_printed, selected_line - 3)
+        start_from = max(0, start_from)
         for line_number in range(start_from, start_from + lines_printed):
             if line_number + 1 == selected_line:
                 sep = " -> "
@@ -176,8 +177,9 @@ class CodeSection:
         return self.str_
     
     @staticmethod
-    def execute(code_source, inputs = None, returns = None):
-        env = {}
+    def execute(code_source, returns = None, env = None):
+        if env is None:
+            env = {}
         code_source = str(code_source)
         assert isinstance(code_source,str)
         parsed = ast.parse(code_source)
@@ -208,7 +210,7 @@ class CodeSection:
                 else:
                     return variables
         lines = ComposerError._show_lines(line_number,code_source)
-        error_msg = f"{error_class} was raised at line {line_number} : {detail}\n{lines}\n\nTraceback:\n{trace_string}"
+        error_msg = f"\n{lines}\n{error_class} was raised at line {line_number} : {detail}\n\nTraceback:\n{trace_string}"
         raise ComposerError(error_msg)
         
     @property

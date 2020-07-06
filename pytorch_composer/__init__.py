@@ -6,6 +6,8 @@ from collections import Counter, defaultdict
 import sys
 import traceback
 
+import torch
+
 
 def parse_entry(entry):
     '''
@@ -157,13 +159,13 @@ class Block():
             else:
                 str_ += " " * 8 + "".join([str(x) for x in line[1:]]) + "\n"
             last = line[0]
-        return str_
+        return str_ + "\nnet = ${model_name}()\n"
 
 
 class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
-    def __init__(self, sequence, data):
+    def __init__(self, sequence, data = None, batch_rank = None):
         self.sequence = sequence
         defaults = {"model_name": "Net"}
         imports = set((
@@ -171,13 +173,41 @@ class Model(CodeSection):
             "torch.nn as nn",
             "torch.nn.functional as F"
         ))
-        returns = ["output"]
+        returns = ["x"]
+        self.default_dim = [4, 3, 32, 32]
+        self.default_batch_rank = 0
+        data = self.parse_data(data, batch_rank)
         super().__init__(data, defaults = defaults, imports = imports, returns = returns)
-
+        
+    def __call__(self, input_ = None, batch_rank = None):
+        data_dim = self.parse_data(input_, batch_rank)
+        self.set_variables(data_dim)
+        env = {"x":input_}
+        return self.execute(self.get_batch_code(), self.returns, env)
+    
+    def parse_data(self, data, batch_rank):
+        if batch_rank is not None:
+            self.default_batch_rank = batch_rank    
+        if isinstance(data, list):
+            self.default_dim = data
+            return None
+        elif isinstance(data, torch.Tensor):
+            self.default_dim = list(data.shape)
+            return None
+        return data
+    
+    def get_batch_code(self):
+        if self.variables["h"]:
+            hidden_vars = ", ".join([x.name for x in self.variables["h"]])
+            return str(self) + f"{hidden_vars} = net.initHidden()\nx = net(x, {hidden_vars})".format(self["model_name"])
+        
+        return str(self) + "\nx = net(x)"
+        
     def set_default_variables(self):
-        self.variables.add_variable("x",[4, 3, 32, 32],0)
+        self.variables.add_variable("x",self.default_dim,self.default_batch_rank)
         
     def set_variables(self, variables):
+        '''Sets the input dimensions and reads the sequence'''
         super().set_variables(variables)
         self.read_sequence(self.sequence)
         
@@ -201,23 +231,6 @@ class Model(CodeSection):
                 self.block.update("Linear", vocab)
             self.block.code = self.block.parsed_code
         return self
-    
-class ComposerError(Exception):
-    @staticmethod
-    def _show_lines(selected_line, str_):
-        '''Prints selected numbered lines from a string. '''
-        all_lines = str_.splitlines() # empty string to start index at 1
-        shown_lines = []
-        lines_printed = min(5,len(all_lines))
-        start_from = max(0,selected_line - 3)
-        for line_number in range(start_from, start_from + lines_printed):
-            if line_number + 1 == selected_line:
-                sep = " -> "
-            else:
-                sep = "    "
-            shown_lines.append(str(line_number + 1).rjust(3) + sep + all_lines[line_number].rstrip())       
-        return "\n".join(shown_lines)
-
     
 class Code:
     def __init__(self, code_sections):
@@ -260,31 +273,8 @@ class Code:
         else:
             raise TypeError
             
-    def __call__(self):
-        env = {}
-        assert isinstance(str(self),str)
-        try:
-            exec(str(self), env)
-        except Exception as error:
-            traceback.format_exc()
-            error_class = error.__class__.__name__
-            if len(error.args):
-                detail = error.args[0]
-            else:
-                detail = None
-            _, _, tb = sys.exc_info()
-            line_number = traceback.extract_tb(tb)[-1][1]
-        else:
-            if self[-1].returns is None:
-                return None
-            else:
-                variables = [env[v] for v in self[-1].returns]
-                if len(variables) == 1:
-                    return variables[0]
-                else:
-                    return variables
-        lines = ComposerError._show_lines(line_number,str(self))
-        raise ComposerError(f"{error_class} was raised at line {line_number} : {detail}\n{lines}")
+    def __call__(self, returns = None):
+        return self[-1].execute(str(self), returns = returns)
             
     @property
     def settings(self):
