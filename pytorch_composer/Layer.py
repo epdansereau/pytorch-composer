@@ -21,8 +21,9 @@ class Layer():
         self.description = None
         
     def __call__(self, variables = None, batch_rank = None):
-        layer_model = pytorch_composer.Model([], variables)
-        self.update_block(layer_model.block)
+        layer_model = pytorch_composer.Model([[self.__class__.__name__,
+                                               self.dimension_arg,
+                                               self.other_args]], variables)
         return layer_model(variables, batch_rank)
 
     # Main loop:
@@ -96,6 +97,8 @@ class Layer():
             variables = Vars({})
             variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
         layer = cls(variables)
+        layer.dimension_arg = dimension_arg
+        layer.other_args = other_args
         args = layer.active_args(dimension_arg, other_args)
         args = layer.get_valid_args(args)
         layer.update_variables(args)

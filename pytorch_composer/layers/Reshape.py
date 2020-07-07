@@ -4,6 +4,7 @@ from pytorch_composer.layers.AdaptiveAvgPool1d import AdaptiveAvgPool1d
 from pytorch_composer.layers.AdaptiveAvgPool2d import AdaptiveAvgPool2d
 from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 
+from pytorch_composer.CodeSection import Vars
 
 class Reshape(Layer):
 
@@ -23,9 +24,13 @@ class Reshape(Layer):
     # Creating the layer:
 
     @classmethod
-    def create(cls, dimension_arg, _, variables):
-        
+    def create(cls, dimension_arg, other_args = None, variables = None):
+        if variables is None:
+            variables = Vars({})
+            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())        
         layer = cls(variables)
+        layer.dimension_arg = dimension_arg
+        layer.other_args = other_args
         res_dims = resizing_args(layer.input_dim, list(dimension_arg))
         if len(res_dims) == 3:
             # Pooling layer needed
