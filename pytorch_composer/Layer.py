@@ -12,13 +12,30 @@ class Layer():
 
     """
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        if other_args is None:
+            other_args = {}
+        if variables is None:
+            variables = Vars({})
+            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
+            
+        self.dimension_arg = dimension_arg
+        self.other_args = other_args
+        
         self.layer_type = None
         self.variables = variables
         self.args = None
-        self.input_dim = variables["x"][0].dim
+        self.input_dim = variables.output_dim.copy()
         self.nn = None
         self.description = None
+        
+        # Arguments:
+        self.default_args = {}
+        self.dimension_key = ""
+        self.required_args = []
+        self.kw_args = []
+        
+        
         
     def __call__(self, variables = None, batch_rank = None):
         layer_model = pytorch_composer.Model([[self.__class__.__name__,
@@ -91,18 +108,9 @@ class Layer():
 
     @classmethod
     def create(cls, dimension_arg, other_args = None, variables = None):
-        if other_args is None:
-            other_args = {}
-        if variables is None:
-            variables = Vars({})
-            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
-        layer = cls(variables)
-        layer.dimension_arg = dimension_arg
-        layer.other_args = other_args
-        args = layer.active_args(dimension_arg, other_args)
-        args = layer.get_valid_args(args)
-        layer.update_variables(args)
-        layer.args = layer.write_args(args)
+        layer = cls(dimension_arg, other_args, variables)
+        layer.update_variables()
+        layer.args = layer.write_args(layer.valid_args)
         return layer
     
     @classmethod
@@ -113,12 +121,15 @@ class Layer():
     def default_batch_rank(self):
         return 0   
 
-    def active_args(self, dimension_arg, other_args):
+    @property
+    def active_args(self):
         # Joins the dimension_arg and other_args in the same dict.
         # Returns the arguments provided if there are any, or the default values otherwise.
         # Input: int or tuple, dict
         # Output : dict.
         args = {}
+        dimension_arg = self.dimension_arg
+        other_args = self.other_args.copy()
         if dimension_arg is not None:
             args[self.dimension_key] = dimension_arg
         if self.dimension_key in other_args:
@@ -141,10 +152,11 @@ class Layer():
                 args[arg] = self.default_args[arg]
         return args
 
-    def get_valid_args(self, args):
-        return args
+    @property
+    def valid_args(self):
+        return self.active_args
 
-    def update_variables(self, args):
+    def update_variables(self):
         pass
 
     def write_args(self, args):

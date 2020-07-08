@@ -4,13 +4,11 @@ import math
 
 class MaxPool2d(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "maxpool2d"
-        self.args = None
-        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.MaxPool2d"
         self.description = "Pooling layer (2d max)"
-        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -44,7 +42,9 @@ class MaxPool2d(Layer):
 
     # Creating the layer:
 
-    def get_valid_args(self, args):
+    @property
+    def valid_args(self):
+        args = self.active_args
         if args["stride"] is None:
             args["stride"] = args["kernel_size"]
         to_tuple = ["padding", "kernel_size"]
@@ -59,9 +59,9 @@ class MaxPool2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def update_variables(self, args):
+    def update_variables(self):
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
-        args_ = self.ints_to_tuples(args.copy(), to_tuple)
+        args_ = self.ints_to_tuples(self.valid_args, to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2], self.input_dim[3], args_["padding"], args_[
             "dilation"], args_["kernel_size"], args_["stride"])
         self.variables.update_x([self.input_dim[0], self.input_dim[1], h_out, w_out])

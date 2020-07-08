@@ -3,17 +3,15 @@ from pytorch_composer.Layer import Layer
 
 class Embedding(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
         self.vocab = variables["x"][0].vocab
         if self.vocab is None:
             raise ValueError("Not supported: the embedding layer has to receive a tensor of int64")
         self.from_pretrained = self.vocab.weights is not None
         
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "embedding"
-        self.args = None
-        self.input_dim = variables.output_dim.copy()
         self.description = "Embedding layer"
-        self.variables = variables
 
         if self.from_pretrained:
             ''' Embeddings from pretrained '''
@@ -56,19 +54,21 @@ class Embedding(Layer):
 
     # Creating the layer:
 
-    def get_valid_args(self, args):
+    @property
+    def valid_args(self):
+        args = self.active_args
         if self.from_pretrained:
             args['embeddings'] = self.vocab.weights
         else:
             args['num_embeddings'] = self.vocab.size
         return args
 
-    def update_variables(self, args):
+    def update_variables(self):
         out = self.input_dim.copy()
         if self.from_pretrained:
             out += [self.vocab.embed_dim]
         else:
-            out += [args['embedding_dim']]
+            out += [self.valid_args['embedding_dim']]
         self.variables.update_x(out,vocab = None)
 
     # Updating the block object:

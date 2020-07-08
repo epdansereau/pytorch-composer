@@ -4,13 +4,11 @@ import math
 
 class Conv2d(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "conv2d"
-        self.args = None
-        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.Conv2d"
         self.description = "Convolution layer (2d)"
-        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -50,7 +48,9 @@ class Conv2d(Layer):
 
     # Creating the layer:
 
-    def get_valid_args(self, args):
+    @property
+    def valid_args(self):
+        args = self.active_args
         args["in_channels"] = self.input_dim[1]
         to_tuple = ["padding", "kernel_size"]
         args = self.ints_to_tuples(args, to_tuple)
@@ -64,7 +64,8 @@ class Conv2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def update_variables(self, args):
+    def update_variables(self):
+        args = self.valid_args
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(args.copy(), to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2],

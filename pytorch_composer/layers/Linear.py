@@ -3,13 +3,11 @@ from pytorch_composer.Layer import Layer
 
 class Linear(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "linear"
-        self.args = None
-        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.Linear"
         self.description = "Linear layer"
-        self.variables = variables
 
         # Arguments:
         self.default_args = {
@@ -27,13 +25,15 @@ class Linear(Layer):
 
     # Creating the layer:
 
-    def get_valid_args(self, args):
+    @property
+    def valid_args(self):
+        args = self.active_args
         args['in_features'] = self.input_dim[-1]
         return args
 
-    def update_variables(self, args):
+    def update_variables(self):
         out = self.input_dim.copy()
-        out[-1] = args['out_features']
+        out[-1] = self.valid_args['out_features']
         self.variables.update_x(out)
 
     # Updating the block object:

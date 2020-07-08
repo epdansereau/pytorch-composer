@@ -4,13 +4,11 @@ from pytorch_composer.CodeSection import Vars
 
 class RNN(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "rnn"
-        self.args = None
-        self.input_dim = variables.output_dim.copy()
         self.nn = "nn.RNN"
         self.description = "Recurrent layer"
-        self.variables = variables
 
         # Arguments
         self.default_args = {
@@ -51,32 +49,25 @@ class RNN(Layer):
 
     @classmethod
     def create(cls, dimension_arg, other_args = None, variables = None):
-        if other_args is None:
-            other_args = {}
-        if variables is None:
-            variables = Vars({})
-            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
-        layer = cls(variables)
-        layer.dimension_arg = dimension_arg
-        layer.other_args = other_args
-        args = layer.active_args(dimension_arg, other_args)
-        args = layer.get_valid_args(args)
-        layer.update_variables(args)
-        if args["batch_first"]:
+        layer = cls(dimension_arg, other_args, variables)
+        layer.update_variables()
+        if layer.valid_args["batch_first"]:
             layer.hidden_dim = tuple(
                 [1, layer.output_dim[0], layer.output_dim[2]])
         else:
             layer.hidden_dim = tuple([1] + layer.output_dim[1:])
-        layer.args = layer.write_args(args)
+        layer.args = layer.write_args(layer.valid_args)
         return layer
 
-    def get_valid_args(self, args):
+    @property
+    def valid_args(self):
+        args = self.active_args
         args['input_size'] = self.input_dim[-1]
         return args
 
-    def update_variables(self, args):
+    def update_variables(self):
         out = self.input_dim.copy()
-        out[-1] = args['hidden_size']
+        out[-1] = self.valid_args['hidden_size']
         self.variables.update_x(out)
 
     # Updating the block object:

@@ -5,12 +5,11 @@ from pytorch_composer.CodeSection import Vars
 
 class permute(Layer):
 
-    def __init__(self, variables):
+    def __init__(self, dimension_arg, other_args = None, variables = None):
+        super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "permute"
-        self.input_dim = variables.output_dim.copy()
         self.reshape_dim = None
         self.permutation = None
-        self.variables = variables
 
 
     # Main loop:
@@ -23,28 +22,21 @@ class permute(Layer):
 
     @classmethod
     def create(cls, permutation, other_args = None, variables = None):
-        if variables is None:
-            variables = Vars({})
-            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
-        layer = cls(variables)
-        layer.dimension_arg = permutation
-        layer.other_args = other_args
-        layer.permutation = permutation
+        layer = cls(permutation, other_args, variables)
         if len(layer.input_dim) > len(permutation):
             layer.reshape_dim = layer.input_dim[:-2] + \
                 [np.prod(layer.input_dim[len(permutation) - 1:])]
         else:
             layer.reshape_dim = layer.input_dim + \
                 [1] * (len(permutation) - len(layer.input_dim))
-        layer.update_variables(permutation)
         return layer
     
 
-    def update_variables(self, permutation):
+    def update_variables(self):
         out = self.reshape_dim.copy()
-        for i, v in zip(permutation, self.reshape_dim):
+        for i, v in zip(self.permutation, self.reshape_dim):
             out[i] = v
-        self.variables.update_x(out, permutation[self.batch_rank])
+        self.variables.update_x(out, self.permutation[self.batch_rank])
 
     # Updating the block object:
 
