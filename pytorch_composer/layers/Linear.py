@@ -11,11 +11,16 @@ class Linear(Layer):
 
         # Arguments:
         self.default_args = {
-            "bias": True
+            "bias": True,
         }
         self.dimension_key = 'out_features'
         self.required_args = ['in_features', 'out_features']
         self.kw_args = ['bias']
+        self.spaces = {
+            'in_features':'n',
+            'out_features':'n',
+            'bias':'bool', 
+        }
 
     # Main loop:
 

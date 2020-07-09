@@ -19,10 +19,10 @@ def parse_entry(entry):
         assert isinstance(entry[0], str)
         assert len(entry) <= 3
         if entry[1:]:
-            assert type(entry[1]) in [int, tuple, dict]
+            assert type(entry[1]) in [int, tuple, dict, type(None)]
             if entry[2:]:
-                assert not isinstance(
-                    entry[1], dict) and isinstance(
+                assert (not isinstance(
+                    entry[1], dict)) and isinstance(
                     entry[2], dict)
     except BaseException:
         raise TypeError(
@@ -32,7 +32,7 @@ def parse_entry(entry):
     dimension = None
     other_args = {}
     if len(entry) > 1:
-        if type(entry[1]) in [int, tuple]:
+        if type(entry[1]) in [int, tuple, type(None)]:
             dimension = entry[1]
         if isinstance(entry[-1], dict):
             other_args = entry[-1]
