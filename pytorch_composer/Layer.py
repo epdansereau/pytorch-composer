@@ -38,10 +38,21 @@ class Layer():
         
         
     def __call__(self, variables = None, batch_rank = None):
-        layer_model = pytorch_composer.Model([[self.__class__.__name__,
+        return self.layer_model(variables, batch_rank)
+    
+    def __repr__(self):
+        return f'''{self.__class__.__name__}: 
+variables:{self.variables}
+dimension_arg:{self.dimension_key}:{str(self.dimension_arg)}:
+other_args:{self.other_args}
+active_args:{self.active_args}'''
+    
+    @property
+    def layer_model(self):
+        # Single layer model
+        return pytorch_composer.Model([[self.__class__.__name__,
                                                self.dimension_arg,
-                                               self.other_args]], variables)
-        return layer_model(variables, batch_rank)
+                                               self.other_args]], self.variables)
 
     # Main loop:
 
@@ -121,46 +132,12 @@ class Layer():
     def default_batch_rank(self):
         return 0   
 
-#     @property
-#     def active_args(self):
-#         # Joins the dimension_arg and other_args in the same dict.
-#         # Returns the arguments provided if there are any, or the default values otherwise.
-#         # Input: int or tuple, dict
-#         # Output : dict.
-#         breakpoint()
-#         breakpoint()
-#         args = {}
-#         dimension_arg = self.dimension_arg
-#         other_args = self.other_args.copy()
-#         args[self.dimension_key] = dimension_arg
-#         if self.dimension_key in other_args:
-#             if dimension_args is None:
-                
-#             if other_args[self.dimension_key] != dimension_arg:
-#                 warnings.warn(
-#                     "In {} layer, the argument {} was defined twice. The value in" +
-#                     " the argument dictionary will be ignored.".format(
-#                         self.layer_type,
-#                         self.dimension_key))
-#             other_args.pop(self.dimension_key)
-#         for arg in other_args:
-#             if arg not in self.default_args:
-#                 warnings.warn(
-#                     "Unknown argument {} in {} layer will be ignored".format(
-#                         self.dimension_key, self.layer_type))
-#         for arg in self.default_args:
-#             if arg in other_args:
-#                 args[arg] = other_args[arg]
-#             else:
-#                 args[arg] = self.default_args[arg]
-#         return args
-
     @property
     def active_args(self):
         # Joins self.dimension_arg and self.other_args in the same dict.
         # Fills missing arguments with the defaults values
         other_args = self.other_args.copy()
-        if self.dimension_key in self.other_args:
+        if (self.dimension_key in self.other_args) and (self.dimension_arg is not None):
             if other_args[self.dimension_key] != self.dimension_arg:
                 warnings.warn(("In {} layer, the argument {} was defined twice. The value in" +
                 " the argument dictionary will be ignored.").format(
@@ -173,7 +150,7 @@ class Layer():
             if arg not in args:
                 warnings.warn(
                     "Unknown argument {} in {} layer will be ignored".format(
-                        self.dimension_key, self.layer_type))
+                        arg, self.layer_type))
                 other_args.pop(arg)
         return {**self.default_args, **other_args}
 
