@@ -3,7 +3,7 @@ from pytorch_composer.Layer import Layer
 
 class Linear(Layer):
 
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg= None, other_args = None, variables = None):
         super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "linear"
         self.nn = "nn.Linear"
@@ -34,6 +34,8 @@ class Linear(Layer):
     def valid_args(self):
         args = self.active_args
         args['in_features'] = self.input_dim[-1]
+        if not 'out_features' in args:
+            args['out_features'] = args['in_features']
         return args
 
     def update_variables(self):

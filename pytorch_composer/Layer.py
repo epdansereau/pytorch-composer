@@ -17,7 +17,7 @@ class Layer():
             other_args = {}
         if variables is None:
             variables = Vars({})
-            variables.add_variable("x",cls.default_dim(),cls.default_batch_rank())
+            variables.add_variable("x",self.default_dim(),self.default_batch_rank())
             
         self.dimension_arg = dimension_arg
         self.other_args = other_args
@@ -45,7 +45,8 @@ class Layer():
 variables:{self.variables}
 dimension_arg:{self.dimension_key}:{str(self.dimension_arg)}:
 other_args:{self.other_args}
-active_args:{self.active_args}'''
+active_args:{self.active_args}
+valid_args:{self.valid_args}'''
     
     @property
     def layer_model(self):
