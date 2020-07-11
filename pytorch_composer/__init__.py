@@ -8,6 +8,8 @@ import traceback
 
 import torch
 
+import warnings
+
 
 def parse_entry(entry):
     '''
@@ -316,3 +318,9 @@ class Code:
     def save(self, file_name="train.py"):
         with open(file_name, "w") as f:
             f.write(str(self))
+            
+def warnings_off():
+    warnings.filterwarnings("ignore", category=UserWarning)
+    
+def warnings_on():
+    warnings.filterwarnings("default", category=UserWarning)

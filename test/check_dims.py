@@ -93,10 +93,6 @@ def test(sequence, long = False):
         dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
     loop = Loop(model)
-    print("Output:")
-    print(model)
-    print()
-    print("Dimension test:")
     debug_code = '''
 test_result = {}
 

@@ -1,8 +1,9 @@
 from pytorch_composer.Layer import Layer
+import numpy as np
 
 
 class AdaptiveAvgPool1d(Layer):
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg = None, other_args = None, variables = None):
         super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "adaptiveavgpool1d"
         self.nn = "nn.AdaptiveAvgPool1d"
@@ -14,6 +15,10 @@ class AdaptiveAvgPool1d(Layer):
         self.dimension_key = 'output_size'
         self.required_args = ['output_size']
         self.kw_args = []
+        
+        self.spaces = {
+            "output_size":"n",
+        }
 
     # Main loop:
 
@@ -25,15 +30,13 @@ class AdaptiveAvgPool1d(Layer):
 
     # Valid input dimensions:
 
-    @staticmethod
-    def valid_input_dims(input_dims, batch_rank):
-        return Layer.change_rank(input_dims, 3, batch_rank)
-
     # Creating the layer:
 
     @property
     def valid_args(self):
         args = self.active_args
+        if not 'output_size' in args:
+            args['output_size'] = self.input_dim[-1]
         if isinstance(args["output_size"], tuple):
             args["output_size"] = args["output_size"][0]
         return args
@@ -44,6 +47,17 @@ class AdaptiveAvgPool1d(Layer):
         self.variables.update_x(out)
 
     # Updating the block object:
+    
+    def reshape_dims(self):
+        input_dims = self.input_dim.copy()
+        if len(input_dims) <= 3:
+            return [1]*(3 - len(input_dims)) + input_dims
+        else:
+            return [input_dims[0]] + [int(np.prod(input_dims[1:-1]))] + [input_dims[-1]]
 
     def update_block(self, block):
         self.add_reusable_layer(block)
+        if len(self.input_dim) != 3:
+            block.forward_function[-1][-1] = "(x.view{})".format(tuple(self.reshape_dims()))
+            block.forward_function[-1].append(".view{}".format(tuple(self.output_dim)))
+        

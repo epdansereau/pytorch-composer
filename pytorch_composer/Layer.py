@@ -12,7 +12,7 @@ class Layer():
 
     """
 
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg = None, other_args = None, variables = None):
         if other_args is None:
             other_args = {}
         if variables is None:
