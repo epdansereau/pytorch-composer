@@ -4,7 +4,7 @@ from pytorch_composer.CodeSection import Vars
 
 class RNN(Layer):
 
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg = None, other_args = None, variables = None):
         super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "rnn"
         self.nn = "nn.RNN"
@@ -17,6 +17,8 @@ class RNN(Layer):
             "batch_first": False,
             "dropout": 0.0,
             "bidirectional": False,
+            'input_size':32,
+            'hidden_size':32,
         }
         self.dimension_key = 'hidden_size'
         self.required_args = ['input_size', 'hidden_size']
@@ -26,6 +28,11 @@ class RNN(Layer):
             'batch_first',
             'dropout',
             'bidirectional']
+        
+        self.spaces = {
+            "input_size":"n",
+            "hidden_size":"n",
+        }
 
         self.hidden_dim = None
 

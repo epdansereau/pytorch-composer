@@ -41,9 +41,9 @@ class RandomLayor:
     def choice(self,set_):
         return choice(set_)
     
-    def rand_list(self, len_ = None):
+    def rand_list(self, len_ = None, min_ = 1):
         if len_ is None:
-            len_ = randint(1,self.max_list)
+            len_ = randint(min_, self.max_list)
         list_ = []
         for i in range(len_):
             list_.append(self.rand_n())
@@ -81,11 +81,14 @@ def test_layer(layer_type,
     layer = LayerClass.create(dim, other_args, env)
     if verbose:
         print(layer.valid_args)
-    shape = list(layer(t).shape)
+    output = layer(t)
+    if isinstance(output, tuple):
+        output = output[0]
+    shape = list(output.shape)
     if verbose:
         print("output:",shape)
-        print("expected output:", layer.variables["x"][0].dim)
-    assert shape == layer.variables["x"][0].dim
+        print("expected output:", layer.layer_model.variables["x"][0].dim)
+    assert shape == layer.layer_model.variables["x"][0].dim
     return layer
 
 def test_layers(layer_types, verbose = "default"):
@@ -99,7 +102,9 @@ def test_layers(layer_types, verbose = "default"):
     pytorch_composer.warnings_off()
     for layer_type in layer_types:
         for _ in range(50):
-            layer = [*r.rand(layer_type), r.rand_list()]
+            layer = [*r.rand(layer_type), r.rand_list(min_ = 2)]
+            if verbose:
+                print(layer)
             test_layer(*layer, verbose = verbose)
         print("Tested", layer_type)
 
@@ -110,7 +115,8 @@ layer_types = ["Linear",
              "AdaptiveAvgPool1d",
              "AdaptiveAvgPool2d",
              "AdaptiveAvgPool3d",
-             "Reshape",]
+             "Reshape",
+              "RNN",]
 
 if __name__ == "__main__":
-    test_layers(layer_types, verbose = False)
+    test_layers(layer_types)

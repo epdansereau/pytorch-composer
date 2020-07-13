@@ -54,6 +54,9 @@ valid_args:{self.valid_args}'''
         return pytorch_composer.Model([[self.__class__.__name__,
                                                self.dimension_arg,
                                                self.other_args]], self.variables)
+    
+    def get_batch_code(self):
+        return self.layer_model.get_batch_code()
 
     # Main loop:
 

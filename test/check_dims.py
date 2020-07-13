@@ -32,6 +32,7 @@ sequence1 = [
     ["AdaptiveAvgPool2d", 100],
 ]
 sequence2 = [
+    ['RNN', 29, {'input_size': 18, 'hidden_size': 30}],
     ["MaxPool2d", 2],
     ["Linear", 52],
     ["MaxPool2d", 2],
@@ -88,7 +89,7 @@ def number_lines(code):
 def test(sequence, long = False):
     ''' The accuracy should always be 100% '''
     if long:
-        dataset = pytorch_composer.datasets.RandLongDataset()
+        dataset = pytorch_composer.datasets.RandDataset({"shape":[29, 1, 11, 10]})
     else:
         dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
