@@ -2,7 +2,7 @@ from pytorch_composer import get_layer
 from torch import rand
 from pytorch_composer.CodeSection import Vars
 
-from random import randint, random, choice
+from random import randint, random, choice, sample
 from pytorch_composer.get_layer import get_layer
 
 import pytorch_composer
@@ -21,13 +21,22 @@ class RandomLayor:
             "n":self.rand_n,
             "bool":self.rand_bool,
             "list":self.rand_list,
+            "float":self.rand_float,
         }
         
     def rand_setting(self, space):
-        if isinstance(space,tuple):
+        if isinstance(space, set):
+            return sample(space, 1)
+        elif isinstance(space,tuple):
             return self.space_dict[space[0]](*space[1:])
         else:
             return self.space_dict[space]()
+    
+    def rand_float(self):
+        if random() < self.critical_prob:
+            return choice([0.,1.])
+        else:
+            return random()
     
     def rand_n(self):
         if random() < self.critical_prob:

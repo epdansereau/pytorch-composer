@@ -272,12 +272,3 @@ valid_args:{self.valid_args}'''
         for key in keys:
             arguments[key] = self.tuple_to_int(arguments[key])
         return arguments
-
-    # Debugging:
-    def print_all(self):
-        print("self.layer_type:", self.layer_type)
-        print("self.args:", self.args)
-        print("self.input_dim:", self.input_dim)
-        print("self.output_dim:", self.output_dim)
-        print("self.nn:", self.nn)
-        print("self.description:", self.description)

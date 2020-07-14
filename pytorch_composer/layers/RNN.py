@@ -32,6 +32,12 @@ class RNN(Layer):
         self.spaces = {
             "input_size":"n",
             "hidden_size":"n",
+            'num_layers':"n",
+            'nonlinearity':set(['tanh','relu']),
+            "bias": "bool",
+            #"batch_first": "bool",    ######TBD
+            'dropout':'float',
+            #"bidirectional": "bool",  ######TBD
         }
 
         self.hidden_dim = None
@@ -58,11 +64,15 @@ class RNN(Layer):
     def create(cls, dimension_arg, other_args = None, variables = None):
         layer = cls(dimension_arg, other_args, variables)
         layer.update_variables()
+        if layer.valid_args["bidirectional"]:
+            num_directions = 2
+        else:
+            num_directions = 1
         if layer.valid_args["batch_first"]:
             layer.hidden_dim = tuple(
-                [1, layer.output_dim[0], layer.output_dim[2]])
+                [layer.valid_args["num_layers"]*num_directions, layer.output_dim[0], layer.output_dim[2]])
         else:
-            layer.hidden_dim = tuple([1] + layer.output_dim[1:])
+            layer.hidden_dim = tuple([layer.valid_args["num_layers"]*num_directions] + layer.output_dim[1:])
         layer.args = layer.write_args(layer.valid_args)
         return layer
 
