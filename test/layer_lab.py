@@ -1,9 +1,9 @@
 from pytorch_composer import get_layer
 from torch import rand
-from pytorch_composer.CodeSection import Vars
+from pytorch_composer.CodeSection import Vars, Vocab
 
 from random import randint, random, choice, sample
-from pytorch_composer.get_layer import get_layer
+from pytorch_composer.get_layer import get_layer, layers_list
 
 import pytorch_composer
 
@@ -81,16 +81,19 @@ def test_layer(layer_type,
         input_shape = [5,38,10]
     t = rand(input_shape)
     env = Vars({})
-    env.add_variable("x",input_shape)
+    if layer_type != "Embedding":
+        env.add_variable("x",input_shape)
+    else:
+        env.add_variable("x",input_shape,0,[x for x in range(RandomLayer().max_int)])
     if verbose:
         print("input:", env)
     LayerClass = get_layer(layer_type)
     if isinstance(dim, list):
         dim = tuple(dim)
-    layer = LayerClass.create(dim, other_args, env)
-    if verbose:
-        print(layer.valid_args)
+    layer = LayerClass(dim, other_args, env)
     output = layer(t)
+#     if verbose:
+#         print(layer.layer_model.valid_args)
     if isinstance(output, tuple):
         output = output[0]
     shape = list(output.shape)
@@ -120,12 +123,8 @@ def test_layers(layer_types, verbose = "default"):
     print("All tests passed")
 
 
-layer_types = ["Linear",
-             "AdaptiveAvgPool1d",
-             "AdaptiveAvgPool2d",
-             "AdaptiveAvgPool3d",
-             "Reshape",
-              "RNN",]
+layer_types = layers_list
+layer_types.remove("Embedding")
 
 if __name__ == "__main__":
     test_layers(layer_types)

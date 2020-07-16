@@ -17,7 +17,9 @@ from .layers import Embedding
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
 # Example:
 # layers["Linear"] will return the Linear class.
-layers = {x.__name__: x for x in Layer.__subclasses__()}
+layers_dict = {x.__name__: x for x in Layer.__subclasses__()}
+
+layers_list = list(layers_dict.keys())
 
 def get_layer(layer_name):
-    return layers[layer_name]
+    return layers_dict[layer_name]

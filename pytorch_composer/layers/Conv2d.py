@@ -4,7 +4,7 @@ import math
 
 class Conv2d(Layer):
 
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg = None, other_args = None, variables = None):
         super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "conv2d"
         self.nn = "nn.Conv2d"
@@ -31,6 +31,9 @@ class Conv2d(Layer):
             "groups",
             "bias",
             "padding_mode"]
+        self.spaces = {
+            "out_channels":"n",
+        }
 
     # Main loop:
 

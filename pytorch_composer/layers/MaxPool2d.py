@@ -4,7 +4,7 @@ import math
 
 class MaxPool2d(Layer):
 
-    def __init__(self, dimension_arg, other_args = None, variables = None):
+    def __init__(self, dimension_arg = None, other_args = None, variables = None):
         super().__init__(dimension_arg, other_args, variables)
         self.layer_type = "maxpool2d"
         self.nn = "nn.MaxPool2d"
@@ -27,6 +27,10 @@ class MaxPool2d(Layer):
             "dilation",
             "return_indices",
             "ceil_mode"]
+        
+        self.spaces = {
+            "kernel_size":"n",
+        }
 
     # Main loop:
 

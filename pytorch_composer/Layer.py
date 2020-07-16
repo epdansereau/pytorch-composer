@@ -9,7 +9,6 @@ class Layer():
     Parent class to all layer type classes. Holds values representing a single layer in the model.
     All child classes are expected to have at least self.input_dim (list) and self.output_dim (list)
     attributes, and a classmethod create() that handles instanciation.
-
     """
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
