@@ -4,11 +4,7 @@ from pytorch_composer.Layer import Layer
 class Relu(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "relu"
-        self.description = "Relu activation"
-        
-        self.spaces = {}
+        super().__init__(dimension_arg, other_args, variables, layer_type = "relu", description = "Relu activation")
 
     # Main loop:
 

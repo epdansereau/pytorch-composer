@@ -5,40 +5,41 @@ from pytorch_composer.CodeSection import Vars
 class RNN(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "rnn"
-        self.nn = "nn.RNN"
-        self.description = "Recurrent layer"
-
-        # Arguments
-        self.default_args = {
-            "num_layers": 1,
-            "bias": True,
-            "batch_first": False,
-            "dropout": 0.0,
-            "bidirectional": False,
-            'input_size':32,
-            'hidden_size':32,
-        }
-        self.dimension_key = 'hidden_size'
-        self.required_args = ['input_size', 'hidden_size']
-        self.kw_args = [
-            'num_layers',
-            'bias',
-            'batch_first',
-            'dropout',
-            'bidirectional']
-        
-        self.spaces = {
-            "input_size":"n",
-            "hidden_size":"n",
-            'num_layers':"n",
-            'nonlinearity':set(['tanh','relu']),
-            "bias": "bool",
-            #"batch_first": "bool",    ######TBD
-            'dropout':'float',
-            #"bidirectional": "bool",  ######TBD
-        }
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "rnn",
+                 nn = "nn.RNN",
+                 description = "Recurrent layer",
+                 default_args = {
+                    "num_layers": 1,
+                    "bias": True,
+                    "batch_first": False,
+                    "dropout": 0.0,
+                    "bidirectional": False,
+                    'input_size':32,
+                    'hidden_size':32,
+                 },
+                 dimension_key = "hidden_size",
+                 required_args = ['input_size', 'hidden_size'],
+                 kw_args = [
+                    'num_layers',
+                    'bias',
+                    'batch_first',
+                    'dropout',
+                    'bidirectional'],
+                 spaces = {
+                    "input_size":"n",
+                    "hidden_size":"n",
+                    'num_layers':"n",
+                    'nonlinearity':set(['tanh','relu']),
+                    "bias": "bool",
+                    #"batch_first": "bool",    ######TBD
+                    'dropout':'float',
+                    #"bidirectional": "bool",  ######TBD
+                 }
+        )
 
         self.hidden_dim = None
 

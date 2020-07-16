@@ -6,17 +6,17 @@ from pytorch_composer.CodeSection import Vars
 class permute(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "permute"
-        self.reshape_dim = None
-        
-        self.dimension_key = "dims"
-        self.required_args = ["dims"]
-        self.kw_args = []
-        self.spaces = {
-            "dims":"list"
-        }
-
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "permute",
+                 dimension_key = "dims",
+                 required_args = ["dims"],
+                 spaces = {
+                    "dims":"list",
+                 }
+        )
 
     # Main loop:
 

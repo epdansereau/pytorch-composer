@@ -4,21 +4,21 @@ import numpy as np
 
 class AdaptiveAvgPool1d(Layer):
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "adaptiveavgpool1d"
-        self.nn = "nn.AdaptiveAvgPool1d"
-        self.description = "Resizing with adaptive average pooling"
-
-        # Arguments:
-        self.default_args = {
-        }
-        self.dimension_key = 'output_size'
-        self.required_args = ['output_size']
-        self.kw_args = []
-        
-        self.spaces = {
-            "output_size":"n",
-        }
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "adaptiveavgpool1d",
+                 nn = "nn.AdaptiveAvgPool1d",
+                 description = "Resizing with adaptive average pooling",
+                 default_args = None,
+                 dimension_key = 'output_size',
+                 required_args = ['output_size'],
+                 kw_args = [],
+                 spaces = {
+                    "output_size":"n",
+                }
+        )
 
     # Main loop:
 

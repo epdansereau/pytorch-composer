@@ -7,18 +7,20 @@ from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 class Reshape(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "reshape"
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "reshape",
+                 dimension_key = "output_size",
+                 required_args = ['output_size'],
+                 spaces = {
+                    'output_size':"list",
+                 }
+        )
         self.reshape_dim = None
         self.pool = None
         
-        self.dimension_key = 'output_size'
-        self.required_args = ['output_size']
-        
-        self.spaces = {
-            'output_size':"list"
-        }
-
     # Main loop:
 
     # Valid permutation:

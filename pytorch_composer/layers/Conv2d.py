@@ -5,36 +5,38 @@ import math
 class Conv2d(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "conv2d"
-        self.nn = "nn.Conv2d"
-        self.description = "Convolution layer (2d)"
-
-        # Arguments:
-        self.default_args = {
-            "in_channels": None,
-            "out_channels": 32,
-            "kernel_size": 3,
-            "stride": 1,
-            "padding": 0,
-            "dilation": 1,
-            "groups": 1,
-            "bias": True,
-            "padding_mode": "zeros"
-        }
-        self.dimension_key = "out_channels"
-        self.required_args = ["in_channels", "out_channels", "kernel_size"]
-        self.kw_args = [
-            "stride",
-            "padding",
-            "dilation",
-            "groups",
-            "bias",
-            "padding_mode"]
-        self.spaces = {
-            "out_channels":"n",
-        }
-
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "conv2d",
+                 nn = "nn.Conv2d",
+                 description = "Convolution layer (2d)",
+                 default_args = {
+                    "in_channels": None,
+                    "out_channels": 32,
+                    "kernel_size": 3,
+                    "stride": 1,
+                    "padding": 0,
+                    "dilation": 1,
+                    "groups": 1,
+                    "bias": True,
+                    "padding_mode": "zeros"
+                 },
+                 dimension_key = "out_channels",
+                 required_args = ["in_channels", "out_channels", "kernel_size"],
+                 kw_args = [
+                    "stride",
+                    "padding",
+                    "dilation",
+                    "groups",
+                    "bias",
+                    "padding_mode"],
+                 spaces = {
+                    "out_channels":"n",
+                 }
+        )
+        
     # Main loop:
 
     # Valid permutation:

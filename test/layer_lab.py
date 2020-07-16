@@ -9,7 +9,7 @@ import pytorch_composer
 
 class RandomLayor:
     def __init__(self):
-        self.max_int = 40
+        self.max_int = 10
         
         self.max_list = 5
         

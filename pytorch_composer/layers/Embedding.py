@@ -15,36 +15,52 @@ class Embedding(Layer):
 
         if self.from_pretrained:
             ''' Embeddings from pretrained '''
-            self.nn = "nn.Embedding.from_pretrained"
-            # Arguments:        
-            self.default_args = {
-                'embeddings':None,
-                "freeze":True,
-                "padding_idx":None,
-                "max_norm":None,
-                "norm_type":2.0,
-                "scale_grad_by_freq":False,
-                "sparse":False,
-            }
-            self.dimension_key ='embeddings'
-            self.required_args = ['embeddings']
-            self.kw_args = ['freeze', 'padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse']
+            super().__init__(
+                     dimension_arg,
+                     other_args,
+                     variables,
+                     layer_type = "embedding",
+                     nn = "nn.Embedding.from_pretrained",
+                     description = "Embedding layer",
+                     default_args = {
+                        'embeddings':None,
+                        "freeze":True,
+                        "padding_idx":None,
+                        "max_norm":None,
+                        "norm_type":2.0,
+                        "scale_grad_by_freq":False,
+                        "sparse":False,
+                     },
+                     dimension_key = "embeddings",
+                     required_args = ['embeddings'],
+                     kw_args = ['freeze', 'padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse'],
+                     spaces = {
+                        "out_channels":"n",
+                     }
+            )
         else:
             ''' New embeddings '''
-            self.nn = "nn.Embedding"
-            # Arguments:
-            self.default_args = {
-                "padding_idx":None,
-                "max_norm":None,
-                "norm_type":2.0,
-                "scale_grad_by_freq":False,
-                "sparse":False,
-                "_weight":None,
-                'embedding_dim':100, #default size
-            }
-            self.dimension_key = 'embedding_dim'
-            self.required_args = ['num_embeddings', 'embedding_dim']
-            self.kw_args = ['padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse', '_weight']
+            super().__init__(
+                     dimension_arg,
+                     other_args,
+                     variables,
+                     layer_type = "embedding",
+                     nn = "nn.Embedding",
+                     description = "Embedding layer",
+                     default_args = {
+                        "padding_idx":None,
+                        "max_norm":None,
+                        "norm_type":2.0,
+                        "scale_grad_by_freq":False,
+                        "sparse":False,
+                        "_weight":None,
+                        'embedding_dim':100, #default size
+                     },
+                     dimension_key = 'embedding_dim',
+                     required_args = ['num_embeddings', 'embedding_dim'],
+                     kw_args = ['padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse', '_weight'],
+                     spaces = {}
+             )
 
     # Main loop:
 

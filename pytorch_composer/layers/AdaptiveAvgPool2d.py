@@ -5,21 +5,21 @@ import numpy as np
 class AdaptiveAvgPool2d(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "adaptiveavgpool2d"
-        self.nn = "nn.AdaptiveAvgPool2d"
-        self.description = "Resizing with adaptive average pooling"
-
-        # Arguments:
-        self.default_args = {
-        }
-        self.dimension_key = 'output_size'
-        self.required_args = ['output_size']
-        self.kw_args = []
-        
-        self.spaces = {
-            'output_size':('list',2),
-        }
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "adaptiveavgpool2d",
+                 nn = "nn.AdaptiveAvgPool2d",
+                 description = "Resizing with adaptive average pooling",
+                 default_args = None,
+                 dimension_key = 'output_size',
+                 required_args = ['output_size'],
+                 kw_args = [],
+                 spaces = {
+                    'output_size':('list',2),
+                }
+        )
 
     # Main loop:
 

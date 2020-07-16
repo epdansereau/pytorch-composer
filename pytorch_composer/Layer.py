@@ -11,7 +11,19 @@ class Layer():
     attributes, and a classmethod create() that handles instanciation.
     """
 
-    def __init__(self, dimension_arg = None, other_args = None, variables = None):
+    def __init__(self,
+                 dimension_arg = None,
+                 other_args = None,
+                 variables = None,
+                 layer_type = None,
+                 nn = None,
+                 description = None,
+                 default_args = None,
+                 dimension_key = "",
+                 required_args = None,
+                 kw_args = None,
+                 spaces = None
+                ):
         if other_args is None:
             other_args = {}
         if variables is None:
@@ -21,20 +33,29 @@ class Layer():
         self.dimension_arg = dimension_arg
         self.other_args = other_args
         
-        self.layer_type = None
+        self.layer_type = layer_type
         self.variables = variables
         self.args = None
         self.input_dim = variables.output_dim.copy()
-        self.nn = None
-        self.description = None
+        self.nn = nn
+        self.description = description
         
+        if default_args is None:
+            default_args = {}
+        if required_args is None:
+            required_args = []
+        if kw_args is None:
+            kw_args = []
+        if spaces is None:
+            spaces = {}
+            
         # Arguments:
-        self.default_args = {}
-        self.dimension_key = ""
-        self.required_args = []
-        self.kw_args = []
+        self.default_args = default_args
+        self.dimension_key = dimension_key
+        self.required_args = required_args
+        self.kw_args = kw_args
         
-        
+        self.spaces = spaces
         
     def __call__(self, variables = None, batch_rank = None):
         return self.layer_model(variables, batch_rank)

@@ -5,32 +5,33 @@ import math
 class MaxPool2d(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "maxpool2d"
-        self.nn = "nn.MaxPool2d"
-        self.description = "Pooling layer (2d max)"
-
-        # Arguments:
-        self.default_args = {
-            "kernel_size": 2,
-            "stride": None,
-            "padding": 0,
-            "dilation": 1,
-            "return_indices": False,
-            "ceil_mode": False,
-        }
-        self.dimension_key = "kernel_size"
-        self.required_args = ["kernel_size"]
-        self.kw_args = [
-            "stride",
-            "padding",
-            "dilation",
-            "return_indices",
-            "ceil_mode"]
-        
-        self.spaces = {
-            "kernel_size":"n",
-        }
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "maxpool2d",
+                 nn = "nn.MaxPool2d",
+                 description = "Pooling layer (2d max)",
+                 default_args = {
+                    "kernel_size": 2,
+                    "stride": None,
+                    "padding": 0,
+                    "dilation": 1,
+                    "return_indices": False,
+                    "ceil_mode": False,
+                 },
+                 dimension_key = "kernel_size",
+                 required_args = ["kernel_size"],
+                 kw_args = [
+                    "stride",
+                    "padding",
+                    "dilation",
+                    "return_indices",
+                    "ceil_mode"],
+                 spaces = {
+                    "kernel_size":"n",
+                 }
+        )
 
     # Main loop:
 

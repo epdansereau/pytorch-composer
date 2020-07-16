@@ -4,23 +4,25 @@ from pytorch_composer.Layer import Layer
 class Linear(Layer):
 
     def __init__(self, dimension_arg= None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "linear"
-        self.nn = "nn.Linear"
-        self.description = "Linear layer"
-
-        # Arguments:
-        self.default_args = {
-            "bias": True,
-        }
-        self.dimension_key = 'out_features'
-        self.required_args = ['in_features', 'out_features']
-        self.kw_args = ['bias']
-        self.spaces = {
-            'in_features':'n',
-            'out_features':'n',
-            'bias':'bool', 
-        }
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "linear",
+                 nn = "nn.Linear",
+                 description = "Linear layer",
+                 default_args = {
+                    "bias": True,
+                 },
+                 dimension_key = "out_features",
+                 required_args = ['in_features', 'out_features'],
+                 kw_args = ["bias"],
+                 spaces = {
+                    'in_features':'n',
+                    'out_features':'n',
+                    'bias':'bool', 
+                 }
+        )
 
     # Main loop:
 
