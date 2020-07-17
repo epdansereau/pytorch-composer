@@ -228,8 +228,6 @@ valid_args:{self.valid_args}'''
     def update(self, block):
         valid_input_dims = self.valid_input_dims(
             self.output_dim, self.batch_rank)
-        if valid_input_dims is not self.output_dim:
-            self.linked_block.update("Reshape", valid_input_dims)
         self.update_block(block)
         block.variables = self.variables
     
