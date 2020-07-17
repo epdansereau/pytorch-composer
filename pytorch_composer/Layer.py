@@ -35,7 +35,6 @@ class Layer():
         
         self.layer_type = layer_type
         self.variables = variables
-        self.args = None
         self.input_dim = variables.output_dim.copy()
         self.nn = nn
         self.description = description
@@ -145,7 +144,6 @@ valid_args:{self.valid_args}'''
     def create(cls, dimension_arg, other_args = None, variables = None):
         layer = cls(dimension_arg, other_args, variables)
         layer.update_variables()
-        layer.args = layer.write_args(layer.valid_args)
         return layer
     
     @classmethod
@@ -181,6 +179,10 @@ valid_args:{self.valid_args}'''
     @property
     def valid_args(self):
         return self.active_args
+    
+    @property
+    def args(self):
+        return self.write_args(self.valid_args)
 
     def update_variables(self):
         pass
@@ -211,6 +213,10 @@ valid_args:{self.valid_args}'''
         # function to update itself.
         pass
 
+    def update(self, block):
+        self.update_block(block)
+        block.variables = self.variables
+    
     def add_unique_layer(self, block, hidden=False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the
         # layer has weights).

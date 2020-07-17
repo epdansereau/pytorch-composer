@@ -64,23 +64,6 @@ class Block():
 
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
-            
-            # Valid permutation:
-
-            permutation = get_layer(layer_type).permutation(
-                self.output_dim, self.batch_rank, other_args)
-            if permutation:
-                self.update("permute", permutation)
-
-            # Valid input dimensions:
-            
-            valid_input_dims = get_layer(layer_type).valid_input_dims(
-                self.output_dim, self.batch_rank)
-            if valid_input_dims is not self.output_dim:
-                self.update("Reshape", valid_input_dims)
-
-            # Adding the requested layer:
-
             self.update(layer_type, dimension_arg, other_args)
             
         self.code = self.parsed_code
@@ -129,10 +112,28 @@ class Block():
         return self.write(self.code)
 
     def update(self, layer_type, dimension_arg=None, other_args=None):
-        layer = get_layer(layer_type).create(
+        
+        layer_class = get_layer(layer_type)
+        
+        # Valid permutation:
+
+        permutation = layer_class.permutation(
+            self.output_dim, self.batch_rank, other_args)
+        if permutation:
+            self.update("permute", permutation)
+
+        # Valid input dimensions:
+
+        valid_input_dims = layer_class.valid_input_dims(
+            self.output_dim, self.batch_rank)
+        if valid_input_dims is not self.output_dim:
+            self.update("Reshape", valid_input_dims)
+
+        # Adding the requested layer:
+        
+        layer = layer_class.create(
             dimension_arg, other_args, self.variables)
-        layer.update_block(self)
-        self.variables = layer.variables
+        layer.update(self)
 
     def add_forward(self, line):
         self.forward_function.append(line)

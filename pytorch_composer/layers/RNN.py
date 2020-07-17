@@ -74,7 +74,6 @@ class RNN(Layer):
                 [layer.valid_args["num_layers"]*num_directions, layer.output_dim[0], layer.output_dim[2]])
         else:
             layer.hidden_dim = tuple([layer.valid_args["num_layers"]*num_directions] + layer.output_dim[1:])
-        layer.args = layer.write_args(layer.valid_args)
         return layer
 
     @property
