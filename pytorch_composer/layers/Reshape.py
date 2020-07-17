@@ -4,6 +4,8 @@ from pytorch_composer.layers.AdaptiveAvgPool1d import AdaptiveAvgPool1d
 from pytorch_composer.layers.AdaptiveAvgPool2d import AdaptiveAvgPool2d
 from pytorch_composer.layers.AdaptiveAvgPool3d import AdaptiveAvgPool3d
 
+from copy import deepcopy
+
 class Reshape(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
@@ -44,7 +46,8 @@ class Reshape(Layer):
                 pool = AdaptiveAvgPool2d
             if len(layer.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            layer.pool = pool.create(tuple(pool_args), None, layer.variables.copy())
+            layer.pool = pool.create(tuple(pool_args), None,
+                                     deepcopy(layer.linked_block))
             layer.variables.update_x(out)
         else:
             layer.variables.update_x(res_dims[-1])
@@ -59,3 +62,5 @@ class Reshape(Layer):
             self.pool.update_block(block)
         block.add_forward(
             ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
+        
+

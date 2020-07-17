@@ -85,6 +85,7 @@ def test_layer(layer_type,
         env.add_variable("x",input_shape)
     else:
         env.add_variable("x",input_shape,0,[x for x in range(RandomLayer().max_int)])
+    env = pytorch_composer.Block([], env)
     if verbose:
         print("input:", env)
     LayerClass = get_layer(layer_type)

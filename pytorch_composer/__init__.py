@@ -132,7 +132,7 @@ class Block():
         # Adding the requested layer:
         
         layer = layer_class.create(
-            dimension_arg, other_args, self.variables)
+            dimension_arg, other_args, self)
         layer.update(self)
 
     def add_forward(self, line):
