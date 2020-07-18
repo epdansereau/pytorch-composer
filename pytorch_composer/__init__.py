@@ -218,6 +218,30 @@ class Model(CodeSection):
         self.block.code = self.block.parsed_code
         self.variables = self.block.variables
         
+    def update(self, layer_type, dimension_arg=None, other_args=None):
+        
+        layer_class = get_layer(layer_type)
+        
+        # Valid permutation:
+
+        permutation = layer_class.permutation(
+            self.block.output_dim, self.block.batch_rank, other_args)
+        if permutation:
+            self.update("permute", permutation)
+
+        # Valid input dimensions:
+
+        valid_input_dims = layer_class.valid_input_dims(
+            self.block.output_dim, self.block.batch_rank)
+        if valid_input_dims is not self.block.output_dim:
+            self.update("Reshape", valid_input_dims)
+
+        # Adding the requested layer:
+        
+        layer = layer_class.create(
+            dimension_arg, other_args, self)
+        layer.update(self.block)
+        
     @property
     def template(self):
         return str(self.block)
