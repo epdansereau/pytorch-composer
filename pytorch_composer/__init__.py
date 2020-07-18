@@ -54,20 +54,6 @@ class Block():
         self.variables = variables
         self.input_dim = variables.output_dim.copy()
         
-        
-        # Valid dtype:
-
-        if self.vocab is not None:
-            self.update("Embedding")
-
-        # Main loop:
-
-        for entry in sequence:
-            layer_type, dimension_arg, other_args = parse_entry(entry)
-            self.update(layer_type, dimension_arg, other_args)
-            
-        self.code = self.parsed_code
-        
     @property
     def output_dim(self):
         return self.variables.output_dim
@@ -218,6 +204,18 @@ class Model(CodeSection):
         
     def read_sequence(self, sequence):
         self.block = Block(sequence,self.variables)
+        # Valid dtype:
+
+        if self.block.vocab is not None:
+            self.block.update("Embedding")
+
+        # Main loop:
+
+        for entry in sequence:
+            layer_type, dimension_arg, other_args = parse_entry(entry)
+            self.block.update(layer_type, dimension_arg, other_args)
+            
+        self.block.code = self.block.parsed_code
         self.variables = self.block.variables
         
     @property

@@ -57,7 +57,7 @@ class Layer():
         self.spaces = spaces
         
     def set_input_dim(self):
-        self.input_dim = self.variables.output_dim.copy()
+        self.input_dim = self.linked_block.output_dim.copy()
         
     def __call__(self, variables = None, batch_rank = None):
         return self.layer_model(variables, batch_rank)
@@ -87,7 +87,7 @@ valid_args:{self.valid_args}'''
             model.block.output_dim, model.block.batch_rank)
         if valid_input_dims is not self.output_dim:
             model.block.update("Reshape", valid_input_dims)
-        self.linked_model = model
+        self.linked_block = model.block
         self.set_input_dim()
         self.update_variables()
         self.update(model.block)

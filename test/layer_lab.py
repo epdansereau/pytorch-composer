@@ -7,6 +7,8 @@ from pytorch_composer.get_layer import get_layer, layers_list
 
 import pytorch_composer
 
+from pytorch_composer import Model
+
 class RandomLayor:
     def __init__(self):
         self.max_int = 10
@@ -92,6 +94,39 @@ def test_layer(layer_type,
     if isinstance(dim, list):
         dim = tuple(dim)
     layer = LayerClass(dim, other_args, env)
+    output = layer(t)
+#     if verbose:
+#         print(layer.layer_model.valid_args)
+    if isinstance(output, tuple):
+        output = output[0]
+    shape = list(output.shape)
+    if verbose:
+        print("output:",shape)
+        print("expected output:", layer.layer_model.variables["x"][0].dim)
+    assert shape == layer.layer_model.variables["x"][0].dim
+    return layer
+
+def test_layer2(layer_type,
+               dim = 30,
+               other_args = None,
+               input_shape = None,
+               verbose = False):
+    if input_shape is None:
+        input_shape = [5,38,10]
+    t = rand(input_shape)
+    env = Vars({})
+    if layer_type != "Embedding":
+        env.add_variable("x",input_shape)
+    else:
+        env.add_variable("x",input_shape,0,[x for x in range(RandomLayer().max_int)])
+    env = pytorch_composer.Block([], env)
+    model = Model([],env)
+    if verbose:
+        print("input:", env)
+    LayerClass = get_layer(layer_type)
+    if isinstance(dim, list):
+        dim = tuple(dim)
+    layer = LayerClass(dim, other_args, model.block)
     output = layer(t)
 #     if verbose:
 #         print(layer.layer_model.valid_args)
