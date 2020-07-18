@@ -169,12 +169,6 @@ valid_args:{self.valid_args}'''
             return new_dims
 
     # Creating the layer:
-
-    @classmethod
-    def create(cls, dimension_arg, other_args = None, variables = None):
-        layer = cls(dimension_arg, other_args, variables)
-        layer.update_variables()
-        return layer
     
     @classmethod
     def default_dim(self):
