@@ -44,8 +44,9 @@ class Reshape(Layer):
                 pool = AdaptiveAvgPool2d
             if len(self.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            self.pool = pool.create(tuple(pool_args), None,
+            self.pool = pool(tuple(pool_args), None,
                                      deepcopy(self.linked_model))
+            self.pool.update_variables()
             self.variables.update_x(out)
         else:
             self.variables.update_x(res_dims[-1])

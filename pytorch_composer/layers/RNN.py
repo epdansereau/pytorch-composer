@@ -61,21 +61,6 @@ class RNN(Layer):
 
     # Creating the layer:
 
-    @classmethod
-    def create(cls, dimension_arg, other_args = None, variables = None):
-        layer = cls(dimension_arg, other_args, variables)
-        layer.update_variables()
-        if layer.valid_args["bidirectional"]:
-            num_directions = 2
-        else:
-            num_directions = 1
-        if layer.valid_args["batch_first"]:
-            layer.hidden_dim = tuple(
-                [layer.valid_args["num_layers"]*num_directions, layer.output_dim[0], layer.output_dim[2]])
-        else:
-            layer.hidden_dim = tuple([layer.valid_args["num_layers"]*num_directions] + layer.output_dim[1:])
-        return layer
-
     @property
     def valid_args(self):
         args = self.active_args
@@ -86,6 +71,15 @@ class RNN(Layer):
         out = self.input_dim.copy()
         out[-1] = self.valid_args['hidden_size']
         self.variables.update_x(out)
+        if self.valid_args["bidirectional"]:
+            num_directions = 2
+        else:
+            num_directions = 1
+        if self.valid_args["batch_first"]:
+            self.hidden_dim = tuple(
+                [self.valid_args["num_layers"]*num_directions, self.output_dim[0], self.output_dim[2]])
+        else:
+            self.hidden_dim = tuple([self.valid_args["num_layers"]*num_directions] + self.output_dim[1:])
 
     # Updating the block object:
 

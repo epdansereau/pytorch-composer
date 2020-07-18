@@ -214,8 +214,9 @@ class Model(CodeSection):
 
         # Adding the requested layer:
         
-        layer = layer_class.create(
+        layer = layer_class(
             dimension_arg, other_args, self)
+        layer.update_variables()
         layer.update(self.block)
         
     @property
