@@ -30,28 +30,25 @@ class Reshape(Layer):
     # Valid input dimensions:
 
     # Creating the layer:
-
-    @classmethod
-    def create(cls, dimension_arg, other_args = None, variables = None):       
-        layer = cls(dimension_arg, other_args, variables)
-        output_size = layer.valid_args["output_size"]
-        res_dims = resizing_args(layer.input_dim, list(output_size))
+    
+    def update_variables(self):
+        output_size = self.valid_args["output_size"]
+        res_dims = resizing_args(self.input_dim, list(output_size))
         if len(res_dims) == 3:
             # Pooling layer needed
-            layer.reshape_dim, pool_args, out = res_dims
-            layer.variables.update_x(layer.reshape_dim)
-            if len(layer.reshape_dim) == 3:
+            self.reshape_dim, pool_args, out = res_dims
+            self.variables.update_x(self.reshape_dim)
+            if len(self.reshape_dim) == 3:
                 pool = AdaptiveAvgPool1d
-            if len(layer.reshape_dim) == 4:
+            if len(self.reshape_dim) == 4:
                 pool = AdaptiveAvgPool2d
-            if len(layer.reshape_dim) == 5:
+            if len(self.reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            layer.pool = pool.create(tuple(pool_args), None,
-                                     deepcopy(layer.linked_model))
-            layer.variables.update_x(out)
+            self.pool = pool.create(tuple(pool_args), None,
+                                     deepcopy(self.linked_model))
+            self.variables.update_x(out)
         else:
-            layer.variables.update_x(res_dims[-1])
-        return layer
+            self.variables.update_x(res_dims[-1])
 
     # Updating the block object:
 
