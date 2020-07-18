@@ -14,7 +14,7 @@ class Layer():
     def __init__(self,
                  dimension_arg = None,
                  other_args = None,
-                 linked_block = None,
+                 linked_model = None,
                  layer_type = None,
                  nn = None,
                  description = None,
@@ -26,13 +26,13 @@ class Layer():
                 ):
         if other_args is None:
             other_args = {}
-        if linked_block is None:
-            linked_block  = self.new_block()
+        if linked_model is None:
+            linked_model  = self.new_model()
             
         self.dimension_arg = dimension_arg
         self.other_args = other_args
         
-        self.linked_block = linked_block
+        self.linked_model = linked_model
         
         self.layer_type = layer_type
         self.set_input_dim()
@@ -57,7 +57,7 @@ class Layer():
         self.spaces = spaces
         
     def set_input_dim(self):
-        self.input_dim = self.linked_block.output_dim.copy()
+        self.input_dim = self.linked_model.block.output_dim.copy()
         
     def __call__(self, variables = None, batch_rank = None):
         return self.layer_model(variables, batch_rank)
@@ -70,10 +70,10 @@ other_args:{self.other_args}
 active_args:{self.active_args}
 valid_args:{self.valid_args}'''
     
-    def new_block(self):
+    def new_model(self):
         variables = Vars({})
         variables.add_variable("x",self.default_dim(),self.default_batch_rank())
-        return pytorch_composer.Block([], variables)
+        return pytorch_composer.Model([], variables)
     
     def update_model(self, model):
         permutation = self.permutation(
@@ -95,7 +95,7 @@ valid_args:{self.valid_args}'''
     
     @property
     def variables(self):
-        return self.linked_block.variables
+        return self.linked_model.block.variables
     
     @property
     def layer_model(self):
@@ -244,8 +244,7 @@ valid_args:{self.valid_args}'''
         pass
 
     def update(self, block):
-        valid_input_dims = self.valid_input_dims(
-            self.output_dim, self.batch_rank)
+        # Valid input dimensions:   
         self.update_block(block)
         block.variables = self.variables
     

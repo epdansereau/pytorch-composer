@@ -207,13 +207,13 @@ class Model(CodeSection):
         # Valid dtype:
 
         if self.block.vocab is not None:
-            self.block.update("Embedding")
+            self.update("Embedding")
 
         # Main loop:
 
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
-            self.block.update(layer_type, dimension_arg, other_args)
+            self.update(layer_type, dimension_arg, other_args)
             
         self.block.code = self.block.parsed_code
         self.variables = self.block.variables
@@ -253,9 +253,9 @@ class Model(CodeSection):
             vocab = output_dim[-1]
             output_dim[-1] = -1
         if output_dim is not self.block.output_dim:
-            self.block.update("Reshape", output_dim)
+            self.update("Reshape", output_dim)
             if vocab is not None:
-                self.block.update("Linear", vocab)
+                self.update("Linear", vocab)
             self.block.code = self.block.parsed_code
         return self
     
