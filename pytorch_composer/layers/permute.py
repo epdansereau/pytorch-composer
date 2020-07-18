@@ -26,21 +26,24 @@ class permute(Layer):
 
     # Creating the layer:
 
-    @classmethod
-    def create(cls, permutation, other_args = None, variables = None):
-        layer = cls(permutation, other_args, variables)
-        layer.permutation = layer.valid_args["dims"]
-        if len(layer.input_dim) > len(layer.permutation):
-            layer.reshape_dim = layer.input_dim[:-2] + \
-                [np.prod(layer.input_dim[len(layer.permutation) - 1:])]
-        else:
-            layer.reshape_dim = layer.input_dim + \
-                [1] * (len(layer.permutation) - len(layer.input_dim))
-        return layer
+    def update_variables(self):
+        self.permutation = self.valid_args["dims"]
+        out = [self.input_dim[x] for x in self.permutation]
+        self.variables.update_x(out, self.permutation[self.batch_rank])
     
     @staticmethod
     def sloppy_permute_arg(arg, len_):
-        return list(np.array(arg).argsort()[:len_]) + list(np.arange(len(arg), len_))
+        if len(arg)> len_:
+            arg = arg[:len_]
+        sorted_ = sorted(arg)
+        order = []
+        for i,v in enumerate(arg):
+            index = sorted_.index(v)
+            sorted_[index] = -1
+            order.append(index)
+        for i in range(len(arg),len_):
+            order.append(i)    
+        return order
 
     @property
     def valid_args(self):
@@ -48,18 +51,9 @@ class permute(Layer):
         args["dims"] = self.sloppy_permute_arg(args["dims"],len(self.input_dim))
         return args
 
-    def update_variables(self):
-        out = self.reshape_dim.copy()
-        for i, v in zip(self.permutation, self.reshape_dim):
-            out[i] = v
-        self.variables.update_x(out, self.permutation[self.batch_rank])
-
     # Updating the block object:
 
     def update_block(self, block):
         if self.input_dim != self.output_dim:
-            if len(self.input_dim) != len(self.output_dim):
-                block.add_forward(
-                    ["reshape", "x = x.view{}".format(tuple(self.reshape_dim))])
             block.add_forward(
-                ["permute", "x = x.permute{}".format(tuple(self.permutation))])
+                ["permute", "x = x.permute{}.contiguous()".format(tuple(self.permutation))])
