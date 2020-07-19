@@ -214,10 +214,8 @@ class Model(CodeSection):
 
         # Adding the requested layer:
         
-        layer = layer_class(
-            dimension_arg, other_args, self)
-        layer.update_variables()
-        layer.update(self.block)
+        layer = layer_class(dimension_arg, other_args, self)
+        layer.update(self)
         
     @property
     def template(self):

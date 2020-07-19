@@ -237,10 +237,11 @@ valid_args:{self.valid_args}'''
         # function to update itself.
         pass
 
-    def update(self, block):
-        # Valid input dimensions:   
-        self.update_block(block)
-        block.variables = self.variables
+    def update(self, model):
+        # Valid input dimensions:
+        self.update_variables()
+        self.update_block(model.block)
+        model.block.variables = self.variables
     
     def add_unique_layer(self, block, hidden=False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the
