@@ -75,24 +75,6 @@ valid_args:{self.valid_args}'''
         variables.add_variable("x",self.default_dim(),self.default_batch_rank())
         return pytorch_composer.Model([], variables)
     
-    def update_model(self, model):
-        permutation = self.permutation(
-            model.block.output_dim, model.block.batch_rank, self.other_args)
-        if permutation:
-            model.block.update("permute", permutation)
-
-        # Valid input dimensions:
-
-        valid_input_dims = self.valid_input_dims(
-            model.block.output_dim, model.block.batch_rank)
-        if valid_input_dims is not self.output_dim:
-            model.block.update("Reshape", valid_input_dims)
-        self.linked_block = model.block
-        self.set_input_dim()
-        self.update_variables()
-        self.update(model.block)
-        model.block.code = model.block.parsed_code
-    
     @property
     def variables(self):
         return self.linked_model.block.variables
