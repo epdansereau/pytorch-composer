@@ -220,7 +220,20 @@ valid_args:{self.valid_args}'''
         pass
 
     def update(self, model):
+        # Valid permutation:
+
+        permutation = self.permutation(
+            model.block.output_dim, model.block.batch_rank, self.other_args)
+        if permutation:
+            model.update("permute", permutation)
+
         # Valid input dimensions:
+
+        valid_input_dims = self.valid_input_dims(
+            model.block.output_dim, model.block.batch_rank)
+        if valid_input_dims is not model.block.output_dim:
+            model.update("Reshape", valid_input_dims)
+            
         self.update_variables()
         self.update_block(model.block)
         model.block.variables = self.variables
