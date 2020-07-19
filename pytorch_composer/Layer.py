@@ -71,9 +71,7 @@ active_args:{self.active_args}
 valid_args:{self.valid_args}'''
     
     def new_model(self):
-        variables = Vars({})
-        variables.add_variable("x",self.default_dim(),self.default_batch_rank())
-        return pytorch_composer.Model([], variables)
+        return pytorch_composer.Model([],self.default_dim(),self.default_batch_rank())
     
     @property
     def variables(self):
