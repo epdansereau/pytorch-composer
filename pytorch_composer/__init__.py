@@ -196,25 +196,7 @@ class Model(CodeSection):
         
     def update(self, layer_type, dimension_arg=None, other_args=None):
         
-        layer_class = get_layer(layer_type)
-        
-        # Valid permutation:
-
-        permutation = layer_class.permutation(
-            self.block.output_dim, self.block.batch_rank, other_args)
-        if permutation:
-            self.update("permute", permutation)
-
-        # Valid input dimensions:
-
-        valid_input_dims = layer_class.valid_input_dims(
-            self.block.output_dim, self.block.batch_rank)
-        if valid_input_dims is not self.block.output_dim:
-            self.update("Reshape", valid_input_dims)
-
-        # Adding the requested layer:
-        
-        layer = layer_class(dimension_arg, other_args, self)
+        layer = get_layer(layer_type)(dimension_arg, other_args, self)
         layer.update(self)
         
     @property

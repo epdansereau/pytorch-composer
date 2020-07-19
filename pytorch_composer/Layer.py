@@ -232,6 +232,7 @@ valid_args:{self.valid_args}'''
         if valid_input_dims is not model.block.output_dim:
             model.update("Reshape", valid_input_dims)
             
+        self.set_input_dim()
         self.update_variables()
         self.update_block(model.block)
         model.block.variables = self.variables
