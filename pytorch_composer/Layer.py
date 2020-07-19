@@ -219,6 +219,9 @@ valid_args:{self.valid_args}'''
 
     def update(self, model):
         # Valid permutation:
+        
+        if model.block.vocab is not None:
+            model.update("Embedding")
 
         permutation = self.permutation(
             model.block.output_dim, model.block.batch_rank, self.other_args)
@@ -231,7 +234,7 @@ valid_args:{self.valid_args}'''
             model.block.output_dim, model.block.batch_rank)
         if valid_input_dims is not model.block.output_dim:
             model.update("Reshape", valid_input_dims)
-            
+        self.linked_model = model    
         self.set_input_dim()
         self.update_variables()
         self.update_block(model.block)

@@ -179,24 +179,25 @@ class Model(CodeSection):
         self.read_sequence(self.sequence)
         
     def read_sequence(self, sequence):
-        self.block = Block(sequence,self.variables)
-        # Valid dtype:
+        self.block = Block([],self.variables)
 
-        if self.block.vocab is not None:
-            self.update("Embedding")
-
-        # Main loop:
-
+        self.create_layers(sequence)
+        self.apply_layers()
+        
+    def create_layers(self, sequence):
+        self.layers = []
         for entry in sequence:
             layer_type, dimension_arg, other_args = parse_entry(entry)
-            self.update(layer_type, dimension_arg, other_args)
+            self.layers.append(get_layer(layer_type)(dimension_arg, other_args))
             
+    def apply_layers(self):
+        for layer in self.layers:
+            layer.update(self)
         self.block.code = self.block.parsed_code
         self.variables = self.block.variables
         
     def update(self, layer_type, dimension_arg=None, other_args=None):
-        
-        layer = get_layer(layer_type)(dimension_arg, other_args, self)
+        layer = get_layer(layer_type)(dimension_arg, other_args)
         layer.update(self)
         
     @property
