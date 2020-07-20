@@ -217,7 +217,7 @@ valid_args:{self.valid_args}'''
         # function to update itself.
         pass
 
-    def update(self, model):
+    def _update(self, model):
         # Valid permutation:
         
         if model.block.vocab is not None:
@@ -239,6 +239,10 @@ valid_args:{self.valid_args}'''
         self.update_variables()
         self.update_block(model.block)
         model.block.variables = self.variables
+        
+    def update(self, model):
+        self._update(model)
+        model.layers.append(self)
     
     def add_unique_layer(self, block, hidden=False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the

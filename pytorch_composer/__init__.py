@@ -198,12 +198,11 @@ class Model(CodeSection):
     def apply_layers(self):
         self.block = Block([],self.variables)
         for layer in self.layers:
-            layer.update(self)
-        self.block.code = self.block.parsed_code 
+            layer._update(self)
         
     def update(self, layer_type, dimension_arg=None, other_args=None):
         layer = get_layer(layer_type)(dimension_arg, other_args)
-        layer.update(self)
+        layer._update(self)
         
     @property
     def template(self):
