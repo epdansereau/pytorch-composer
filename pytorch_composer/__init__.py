@@ -131,7 +131,7 @@ class Model(CodeSection):
     ''' CodeSection object built from sequence'''
 
     def __init__(self, sequence, data = None, batch_rank = None):
-        self.sequence = sequence
+        self.create_layers(sequence)
         defaults = {"model_name": "Net"}
         imports = set((
             "torch",
@@ -176,12 +176,10 @@ class Model(CodeSection):
     def set_variables(self, variables):
         '''Sets the input dimensions and reads the sequence'''
         super().set_variables(variables)
-        self.read_sequence(self.sequence)
+        self.read_sequence()
         
-    def read_sequence(self, sequence):
+    def read_sequence(self):
         self.block = Block([],self.variables)
-
-        self.create_layers(sequence)
         self.apply_layers()
         
     def create_layers(self, sequence):
