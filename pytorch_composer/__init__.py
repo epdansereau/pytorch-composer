@@ -53,6 +53,7 @@ class Block():
         self.forward_function = []
         self.variables = variables
         self.input_dim = variables.output_dim.copy()
+        self._code = None
         
     @property
     def output_dim(self):
@@ -93,6 +94,16 @@ class Block():
             ["code", "return " + vars_],
             *hidden_init
         ]
+    
+    @property
+    def code(self):
+        if self._code is None:
+            return self.parsed_code
+        return self._code
+    
+    @code.setter
+    def code(self, code):
+        self._code = code
 
     def __str__(self):
         return self.write(self.code)
@@ -176,10 +187,6 @@ class Model(CodeSection):
     def set_variables(self, variables):
         '''Sets the input dimensions and reads the sequence'''
         super().set_variables(variables)
-        self.read_sequence()
-        
-    def read_sequence(self):
-        self.block = Block([],self.variables)
         self.apply_layers()
         
     def create_layers(self, sequence):
@@ -189,10 +196,10 @@ class Model(CodeSection):
             self.layers.append(get_layer(layer_type)(dimension_arg, other_args))
             
     def apply_layers(self):
+        self.block = Block([],self.variables)
         for layer in self.layers:
             layer.update(self)
-        self.block.code = self.block.parsed_code
-        self.variables = self.block.variables
+        self.block.code = self.block.parsed_code 
         
     def update(self, layer_type, dimension_arg=None, other_args=None):
         layer = get_layer(layer_type)(dimension_arg, other_args)
