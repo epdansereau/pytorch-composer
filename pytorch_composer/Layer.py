@@ -199,9 +199,6 @@ valid_args:{self.valid_args}'''
     def args(self):
         return self.write_args(self.valid_args)
 
-    def update_variables(self, model):
-        pass
-
     def write_args(self, args):
         # Converts the layer's arguments into code.
         # Input: args(dict)
@@ -223,11 +220,6 @@ valid_args:{self.valid_args}'''
 
     # Updating the block object:
 
-    def update_block(self, block):
-        # The Block.update function creates a Layer object, and calls this
-        # function to update itself.
-        pass
-
     def _update(self, model):
         # Valid permutation:
         
@@ -247,9 +239,12 @@ valid_args:{self.valid_args}'''
             model.update("Reshape", valid_input_dims)
         self.linked_model = model    
         self.set_input_dim()
-        self.update_variables(model)
-        self.update_block(model.block)
+        self.update_model(model)
         model.block.variables = self.variables
+        
+    def update_model(self, model):
+        # Layer specific changes to models
+        pass      
         
     def update(self, model):
         self._update(model)

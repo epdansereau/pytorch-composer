@@ -26,9 +26,12 @@ class permute(Layer):
 
     # Creating the layer:
 
-    def update_variables(self, model):
+    def update_model(self, model):
         out = [self.input_dim[x] for x in self.valid_args["dims"]]
-        self.variables.update_x(out, self.valid_args["dims"][self.batch_rank])
+        model.block.variables.update_x(out, self.valid_args["dims"][self.batch_rank])
+        if self.input_dim != self.output_dim:
+            model.block.add_forward(
+                ["permute", "x = x.permute{}.contiguous()".format(tuple(self.valid_args["dims"]))])
     
     @staticmethod
     def sloppy_permute_arg(arg, len_):
@@ -50,9 +53,3 @@ class permute(Layer):
         args["dims"] = self.sloppy_permute_arg(args["dims"],len(self.input_dim))
         return args
 
-    # Updating the block object:
-
-    def update_block(self, block):
-        if self.input_dim != self.output_dim:
-            block.add_forward(
-                ["permute", "x = x.permute{}.contiguous()".format(tuple(self.valid_args["dims"]))])

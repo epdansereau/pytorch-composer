@@ -8,10 +8,6 @@ class Embedding(Layer):
         if self.vocab is None:
             raise ValueError("Not supported: the embedding layer has to receive a tensor of int64")
         self.from_pretrained = self.vocab.weights is not None
-        
-        super().__init__(dimension_arg, other_args, variables)
-        self.layer_type = "embedding"
-        self.description = "Embedding layer"
 
         if self.from_pretrained:
             ''' Embeddings from pretrained '''
@@ -62,13 +58,6 @@ class Embedding(Layer):
                      spaces = {}
              )
 
-    # Main loop:
-
-    # Valid permutation:
-
-    # Valid input dimensions:
-
-    # Creating the layer:
 
     @property
     def valid_args(self):
@@ -78,16 +67,14 @@ class Embedding(Layer):
         else:
             args['num_embeddings'] = self.vocab.size
         return args
-
-    def update_variables(self, model):
+        
+    def update_model(self, model):
         out = self.input_dim.copy()
         if self.from_pretrained:
             out += [self.vocab.embed_dim]
         else:
             out += [self.valid_args['embedding_dim']]
-        self.variables.update_x(out,vocab = None)
-
-    # Updating the block object:
-
-    def update_block(self, block):
-        self.add_unique_layer(block)
+        model.block.variables.update_x(out,vocab = None)
+        
+        self.add_unique_layer(model.block)
+        

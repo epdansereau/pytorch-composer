@@ -20,45 +20,29 @@ class Reshape(Layer):
                     'output_size':"list",
                  }
         )
-        self.reshape_dim = None
-        self.pool = None
         
-    # Main loop:
-
-    # Valid permutation:
-
-    # Valid input dimensions:
-
-    # Creating the layer:
-    
-    def update_variables(self, model):
+        
+    def update_model(self, model):
         output_size = self.valid_args["output_size"]
         res_dims = resizing_args(self.input_dim, list(output_size))
         if len(res_dims) == 3:
             # Pooling layer needed
-            self.reshape_dim, pool_args, out = res_dims
-            self.variables.update_x(self.reshape_dim)
-            if len(self.reshape_dim) == 3:
+            reshape_dim, pool_args, out = res_dims
+            self.variables.update_x(reshape_dim)
+            if len(reshape_dim) == 3:
                 pool = AdaptiveAvgPool1d
-            if len(self.reshape_dim) == 4:
+            if len(reshape_dim) == 4:
                 pool = AdaptiveAvgPool2d
-            if len(self.reshape_dim) == 5:
+            if len(reshape_dim) == 5:
                 pool = AdaptiveAvgPool3d
-            model_copy = deepcopy(self.linked_model)
-            self.pool = pool(tuple(pool_args), None, model_copy)
-            self.pool.update_variables(model_copy)
-            self.variables.update_x(out)
+            pool = pool(tuple(pool_args), None, model)
+            model.block.add_forward(
+                ["reshape", "x = x.view{}".format(tuple(reshape_dim))])
+            pool.update_model(model)
+            model.block.variables.update_x(out)
         else:
-            self.variables.update_x(res_dims[-1])
+            model.block.variables.update_x(res_dims[-1])        
 
-    # Updating the block object:
-
-    def update_block(self, block):
-        if self.pool is not None:
-            block.add_forward(
-                ["reshape", "x = x.view{}".format(tuple(self.reshape_dim))])
-            self.pool.update_block(block)
-        block.add_forward(
+        model.block.add_forward(
             ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
-        
 

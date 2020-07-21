@@ -39,25 +39,23 @@ class AdaptiveAvgPool1d(Layer):
             args['output_size'] = self.input_dim[-1]
         if isinstance(args["output_size"], tuple):
             args["output_size"] = args["output_size"][0]
-        return args
-
-    def update_variables(self, model):
-        out = self.input_dim.copy()
-        out[-1] = self.valid_args["output_size"]
-        self.variables.update_x(out)
+        return args        
 
     # Updating the block object:
     
+    @property
     def reshape_dims(self):
         input_dims = self.input_dim.copy()
         if len(input_dims) <= 3:
             return [1]*(3 - len(input_dims)) + input_dims
         else:
             return [input_dims[0]] + [int(np.prod(input_dims[1:-1]))] + [input_dims[-1]]
-
-    def update_block(self, block):
-        self.add_reusable_layer(block)
-        if len(self.input_dim) != 3:
-            block.forward_function[-1][-1] = "(x.view{})".format(tuple(self.reshape_dims()))
-            block.forward_function[-1].append(".view{}".format(tuple(self.output_dim)))
         
+    def update_model(self, model):
+        out = self.input_dim.copy()
+        out[-1] = self.valid_args["output_size"]
+        model.block.variables.update_x(out)
+        self.add_reusable_layer(model.block)
+        if len(self.input_dim) != 3:
+            model.block.forward_function[-1][-1] = "(x.view{})".format(tuple(self.reshape_dims))
+            model.block.forward_function[-1].append(".view{}".format(tuple(self.output_dim)))

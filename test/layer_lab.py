@@ -104,6 +104,8 @@ def test_layer(layer_type,
         print("output:",shape)
         print("expected output:", layer.layer_model.variables["x"][0].dim)
     assert shape == layer.layer_model.variables["x"][0].dim
+    if shape == input_shape:
+        print("No changes")
     return layer
 
 

@@ -69,16 +69,16 @@ class Conv2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def update_variables(self, model):
+    # Updating the block object:
+        
+    def update_model(self, model):
         args = self.valid_args
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(args.copy(), to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2],
                                       self.input_dim[3], args_["padding"], args_[
             "dilation"], args_["kernel_size"], args_["stride"])
-        self.variables.update_x([self.input_dim[0], args_["out_channels"], h_out, w_out])
-
-    # Updating the block object:
-
-    def update_block(self, block):
-        self.add_unique_layer(block)
+        model.block.variables.update_x([self.input_dim[0], args_["out_channels"], h_out, w_out])
+        
+        self.add_unique_layer(model.block)
+        

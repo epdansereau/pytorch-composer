@@ -39,13 +39,10 @@ class Linear(Layer):
         if not 'out_features' in args:
             args['out_features'] = args['in_features']
         return args
-
-    def update_variables(self, model):
+        
+    def update_model(self, model):
         out = self.input_dim.copy()
         out[-1] = self.valid_args['out_features']
-        self.variables.update_x(out)
+        model.block.variables.update_x(out)        
+        self.add_unique_layer(model.block)
 
-    # Updating the block object:
-
-    def update_block(self, block):
-        self.add_unique_layer(block)

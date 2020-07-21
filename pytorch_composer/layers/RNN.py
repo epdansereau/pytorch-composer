@@ -41,8 +41,6 @@ class RNN(Layer):
                  }
         )
 
-        self.hidden_dim = None
-
     # Main loop:
 
     # Valid permutation:
@@ -67,25 +65,22 @@ class RNN(Layer):
         args['input_size'] = self.input_dim[-1]
         return args
 
-    def update_variables(self, model):
+    def update_model(self, model):
         out = self.input_dim.copy()
         out[-1] = self.valid_args['hidden_size']
-        self.variables.update_x(out)
+        model.block.variables.update_x(out)
         if self.valid_args["bidirectional"]:
             num_directions = 2
         else:
             num_directions = 1
         if self.valid_args["batch_first"]:
-            self.hidden_dim = tuple(
+            hidden_dim = tuple(
                 [self.valid_args["num_layers"]*num_directions, self.output_dim[0], self.output_dim[2]])
         else:
-            self.hidden_dim = tuple([self.valid_args["num_layers"]*num_directions] + self.output_dim[1:])
+            hidden_dim = tuple([self.valid_args["num_layers"]*num_directions] + self.output_dim[1:])
+        model.block.variables.add_variable("h",hidden_dim, self.batch_rank)
+        self.add_hidden_layer(model.block)
 
-    # Updating the block object:
-
-    def update_block(self, block):
-        block.variables.add_variable("h",self.hidden_dim, self.batch_rank)
-        self.add_hidden_layer(block)
 
     def add_hidden_layer(self, block):
         hidden_var = self.variables["h"][-1].name

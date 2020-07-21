@@ -63,15 +63,13 @@ class MaxPool2d(Layer):
             missing_padding_1)
         args = self.tuples_to_ints(args, to_tuple)
         return args
-
-    def update_variables(self, model):
+        
+    def update_model(self, model):
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(self.valid_args, to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2], self.input_dim[3], args_["padding"], args_[
             "dilation"], args_["kernel_size"], args_["stride"])
-        self.variables.update_x([self.input_dim[0], self.input_dim[1], h_out, w_out])
+        model.block.variables.update_x([self.input_dim[0], self.input_dim[1], h_out, w_out])
+        
+        self.add_reusable_layer(model.block)
 
-    # Updating the block object:
-
-    def update_block(self, block):
-        self.add_reusable_layer(block)

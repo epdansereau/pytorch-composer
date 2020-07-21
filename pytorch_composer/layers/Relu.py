@@ -16,6 +16,5 @@ class Relu(Layer):
 
     # Updating the block object:
 
-    def update_block(self, block):
-        # Nothing to do here since the reshape happens earlier
-        block.add_forward(["reshape", "x = F.relu(x)"])
+    def update_model(self, model):
+        model.block.add_forward(["reshape", "x = F.relu(x)"])
