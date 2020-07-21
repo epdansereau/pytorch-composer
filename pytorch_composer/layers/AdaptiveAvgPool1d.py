@@ -41,7 +41,7 @@ class AdaptiveAvgPool1d(Layer):
             args["output_size"] = args["output_size"][0]
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = self.input_dim.copy()
         out[-1] = self.valid_args["output_size"]
         self.variables.update_x(out)

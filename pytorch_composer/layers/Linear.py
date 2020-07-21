@@ -40,7 +40,7 @@ class Linear(Layer):
             args['out_features'] = args['in_features']
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = self.input_dim.copy()
         out[-1] = self.valid_args['out_features']
         self.variables.update_x(out)

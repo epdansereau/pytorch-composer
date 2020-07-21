@@ -79,7 +79,7 @@ class Embedding(Layer):
             args['num_embeddings'] = self.vocab.size
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = self.input_dim.copy()
         if self.from_pretrained:
             out += [self.vocab.embed_dim]

@@ -26,7 +26,7 @@ class permute(Layer):
 
     # Creating the layer:
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = [self.input_dim[x] for x in self.valid_args["dims"]]
         self.variables.update_x(out, self.valid_args["dims"][self.batch_rank])
     

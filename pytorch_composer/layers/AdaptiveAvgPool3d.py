@@ -38,7 +38,7 @@ class AdaptiveAvgPool3d(Layer):
         args["output_size"] = self.int_to_tuple(args["output_size"])
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = self.input_dim.copy()
         if len(out) < 3:
             out = list(self.valid_args["output_size"])

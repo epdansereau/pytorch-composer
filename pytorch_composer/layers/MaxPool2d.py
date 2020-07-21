@@ -64,7 +64,7 @@ class MaxPool2d(Layer):
         args = self.tuples_to_ints(args, to_tuple)
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         to_tuple = ["padding", "dilation", "kernel_size", "stride"]
         args_ = self.ints_to_tuples(self.valid_args, to_tuple)
         h_out, w_out = self._conv_dim(self.input_dim[2], self.input_dim[3], args_["padding"], args_[

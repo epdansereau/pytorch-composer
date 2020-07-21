@@ -199,7 +199,7 @@ valid_args:{self.valid_args}'''
     def args(self):
         return self.write_args(self.valid_args)
 
-    def update_variables(self):
+    def update_variables(self, model):
         pass
 
     def write_args(self, args):
@@ -247,7 +247,7 @@ valid_args:{self.valid_args}'''
             model.update("Reshape", valid_input_dims)
         self.linked_model = model    
         self.set_input_dim()
-        self.update_variables()
+        self.update_variables(model)
         self.update_block(model.block)
         model.block.variables = self.variables
         

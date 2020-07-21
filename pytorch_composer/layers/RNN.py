@@ -67,7 +67,7 @@ class RNN(Layer):
         args['input_size'] = self.input_dim[-1]
         return args
 
-    def update_variables(self):
+    def update_variables(self, model):
         out = self.input_dim.copy()
         out[-1] = self.valid_args['hidden_size']
         self.variables.update_x(out)
