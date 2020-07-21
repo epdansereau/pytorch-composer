@@ -1,3 +1,4 @@
+
 import math
 import warnings
 import pytorch_composer
@@ -14,7 +15,7 @@ class Layer():
     def __init__(self,
                  dimension_arg = None,
                  other_args = None,
-                 linked_model = None,
+                 data = None,
                  layer_type = None,
                  nn = None,
                  description = None,
@@ -26,13 +27,11 @@ class Layer():
                 ):
         if other_args is None:
             other_args = {}
-        if linked_model is None:
-            linked_model  = self.new_model()
             
         self.dimension_arg = dimension_arg
         self.other_args = other_args
         
-        self.linked_model = linked_model
+        self._linked_model = data
         
         self.layer_type = layer_type
         self.set_input_dim()
@@ -56,6 +55,16 @@ class Layer():
         
         self.spaces = spaces
         
+    @property
+    def linked_model(self):
+        if not isinstance(self._linked_model, pytorch_composer.Model):
+            self._linked_model = self.new_model(self._linked_model)
+        return self._linked_model
+    
+    @linked_model.setter
+    def linked_model(self, data):
+        self._linked_model = data
+        
     def set_input_dim(self):
         self.input_dim = self.linked_model.block.output_dim.copy()
         
@@ -70,8 +79,10 @@ other_args:{self.other_args}
 active_args:{self.active_args}
 valid_args:{self.valid_args}'''
     
-    def new_model(self):
-        return pytorch_composer.Model([],self.default_dim(),self.default_batch_rank())
+    def new_model(self, data_dim = None):
+        if data_dim is None:
+            data_dim = self.default_dim()
+        return pytorch_composer.Model([],data_dim,self.default_batch_rank())
     
     @property
     def variables(self):
