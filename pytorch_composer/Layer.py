@@ -24,6 +24,7 @@ class Layer():
         self.dimension_arg = dimension_arg
         self.other_args = other_args
         
+        self._data = None
         if data is not None:
             self.data = data
         
@@ -57,16 +58,10 @@ class Layer():
         return self.layer_model(data, batch_rank)
     
     def __repr__(self):
-        return f'''{self.__class__.__name__}: 
-dimension_arg:{self.dimension_key}:{str(self.dimension_arg)}:
-other_args:{self.other_args}
-active_args:{self.active_args}
-valid_args:{self.valid_args}'''
+        return f'''{self.__class__.__name__}({str(self.dimension_arg)},{self.other_args})'''
     
-    def new_model(self, data = None):
-        if data is None:
-            data = self.default_dim()
-        return pytorch_composer.Model([],data,self.default_batch_rank())
+    def new_model(self):
+        return pytorch_composer.Model([], self.data, self.default_batch_rank())
     
     @property
     def layer_model(self):
