@@ -9,56 +9,53 @@ class Embedding(Layer):
             raise ValueError("Not supported: the embedding layer has to receive a tensor of int64")
         self.from_pretrained = self.vocab.weights is not None
 
+        super().__init__(
+                 dimension_arg,
+                 other_args,
+                 variables,
+                 layer_type = "embedding",
+                 description = "Embedding layer",
+        )
+        
         if self.from_pretrained:
-            ''' Embeddings from pretrained '''
-            super().__init__(
-                     dimension_arg,
-                     other_args,
-                     variables,
-                     layer_type = "embedding",
-                     nn = "nn.Embedding.from_pretrained",
-                     description = "Embedding layer",
-                     default_args = {
-                        'embeddings':None,
-                        "freeze":True,
-                        "padding_idx":None,
-                        "max_norm":None,
-                        "norm_type":2.0,
-                        "scale_grad_by_freq":False,
-                        "sparse":False,
-                     },
-                     dimension_key = "embeddings",
-                     required_args = ['embeddings'],
-                     kw_args = ['freeze', 'padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse'],
-                     spaces = {
-                        "out_channels":"n",
-                     }
-            )
+            self.pretrained_embeds()
         else:
-            ''' New embeddings '''
-            super().__init__(
-                     dimension_arg,
-                     other_args,
-                     variables,
-                     layer_type = "embedding",
-                     nn = "nn.Embedding",
-                     description = "Embedding layer",
-                     default_args = {
-                        "padding_idx":None,
-                        "max_norm":None,
-                        "norm_type":2.0,
-                        "scale_grad_by_freq":False,
-                        "sparse":False,
-                        "_weight":None,
-                        'embedding_dim':100, #default size
-                     },
-                     dimension_key = 'embedding_dim',
-                     required_args = ['num_embeddings', 'embedding_dim'],
-                     kw_args = ['padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse', '_weight'],
-                     spaces = {}
-             )
+            self.new_embeds()
 
-
+    def pretrained_embeds(self):
+        self.nn = "nn.Embedding.from_pretrained"
+        self.default_args = {
+            'embeddings':None,
+            "freeze":True,
+            "padding_idx":None,
+            "max_norm":None,
+            "norm_type":2.0,
+            "scale_grad_by_freq":False,
+            "sparse":False,
+        }
+        self.dimension_key = "embeddings"
+        self.required_args = ['embeddings']
+        self.kw_args = ['freeze', 'padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse']
+        self.spaces = {
+            "out_channels":"n",
+        }
+        
+    def new_embeds(self):
+        self.nn = "nn.Embedding"
+        self.default_args = {
+            "padding_idx":None,
+            "max_norm":None,
+            "norm_type":2.0,
+            "scale_grad_by_freq":False,
+            "sparse":False,
+            "_weight":None,
+            'embedding_dim':100, #default size
+        }
+        self.dimension_key = "embedding_dim"
+        self.required_args = ['num_embeddings', 'embedding_dim']
+        self.kw_args = ['padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse', '_weight']
+        self.spaces = {}        
+            
     @property
     def valid_args(self):
         args = self.active_args
@@ -69,7 +66,8 @@ class Embedding(Layer):
         return args
         
     def update_model(self, model):
-        out = self.input_dim.copy()
+        input_dim = model.block.output_dim.copy()
+        out = input_dim.copy()
         if self.from_pretrained:
             out += [self.vocab.embed_dim]
         else:

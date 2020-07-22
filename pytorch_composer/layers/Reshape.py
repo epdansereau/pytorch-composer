@@ -24,11 +24,12 @@ class Reshape(Layer):
         
     def update_model(self, model):
         output_size = self.valid_args["output_size"]
-        res_dims = resizing_args(self.input_dim, list(output_size))
+        input_dim = model.block.output_dim.copy()
+        res_dims = resizing_args(input_dim, list(output_size))
         if len(res_dims) == 3:
             # Pooling layer needed
             reshape_dim, pool_args, out = res_dims
-            self.variables.update_x(reshape_dim)
+            model.block.variables.update_x(reshape_dim)
             if len(reshape_dim) == 3:
                 pool = AdaptiveAvgPool1d
             if len(reshape_dim) == 4:
@@ -44,5 +45,5 @@ class Reshape(Layer):
             model.block.variables.update_x(res_dims[-1])        
 
         model.block.add_forward(
-            ["reshape", "x = x.view{}".format(tuple(self.output_dim))])
+            ["reshape", "x = x.view{}".format(tuple(model.block.output_dim))])
 

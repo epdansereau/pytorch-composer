@@ -66,7 +66,7 @@ class RNN(Layer):
         return args
 
     def update_model(self, model):
-        out = self.input_dim.copy()
+        out = model.block.output_dim.copy()
         out[-1] = self.valid_args['hidden_size']
         model.block.variables.update_x(out)
         if self.valid_args["bidirectional"]:
@@ -75,16 +75,18 @@ class RNN(Layer):
             num_directions = 1
         if self.valid_args["batch_first"]:
             hidden_dim = tuple(
-                [self.valid_args["num_layers"]*num_directions, self.output_dim[0], self.output_dim[2]])
+                [self.valid_args["num_layers"]*num_directions,
+                 model.block.output_dim[0],
+                 model.block.output_dim[2]])
         else:
-            hidden_dim = tuple([self.valid_args["num_layers"]*num_directions] + self.output_dim[1:])
-        model.block.variables.add_variable("h",hidden_dim, self.batch_rank)
+            hidden_dim = tuple([self.valid_args["num_layers"]*num_directions] + model.block.output_dim[1:])
+        model.block.variables.add_variable("h",hidden_dim, model.block.batch_rank)
         self.add_hidden_layer(model.block)
 
 
     def add_hidden_layer(self, block):
-        hidden_var = self.variables["h"][-1].name
-        ind = len(self.variables["h"])
+        hidden_var = block.variables["h"][-1].name
+        ind = len(block.variables["h"])
         block.count[self.layer_type] += 1
         block.add_layer(["layer", "self.{}".format(
             self.layer_type), ind, " = {}({})".format(self.nn, self.args)])

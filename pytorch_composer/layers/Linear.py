@@ -41,7 +41,7 @@ class Linear(Layer):
         return args
         
     def update_model(self, model):
-        out = self.input_dim.copy()
+        out = model.block.output_dim.copy()
         out[-1] = self.valid_args['out_features']
         model.block.variables.update_x(out)        
         self.add_unique_layer(model.block)
