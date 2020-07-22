@@ -94,7 +94,7 @@ class RNN(Layer):
                            "{}: ".format(self.description),
                            tuple(self.input_dim),
                            " -> ",
-                           tuple(self.output_dim)])
+                           tuple(block.output_dim)])
         block.add_forward(
             ["forward", "x, {} = ".format(hidden_var),
              "self.{}{}".format(self.layer_type, ind),

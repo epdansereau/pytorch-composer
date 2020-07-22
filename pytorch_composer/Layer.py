@@ -6,12 +6,6 @@ from pytorch_composer.CodeSection import Vars
 
 
 class Layer():
-    """
-    Parent class to all layer type classes. Holds values representing a single layer in the model.
-    All child classes are expected to have at least self.input_dim (list) and self.output_dim (list)
-    attributes, and a classmethod create() that handles instanciation.
-    """
-
     def __init__(self,
                  dimension_arg = None,
                  other_args = None,
@@ -91,9 +85,20 @@ valid_args:{self.valid_args}'''
     @property
     def layer_model(self):
         # Single layer model
-        return pytorch_composer.Model([[self.__class__.__name__,
-                                               self.dimension_arg,
-                                               self.other_args]], self.variables)
+        model = self.new_model()
+        self.update(model)
+        return model
+    
+    @property
+    def data_dim(self):
+        if self._data_dim is None:
+            return self.default_dim()
+        else:
+            return self._data_dim
+        
+    @data_dim.setter
+    def data_dim(self, data_dim):
+        self._data_dim = data_dim
     
     def get_batch_code(self):
         return self.layer_model.get_batch_code()
@@ -105,10 +110,6 @@ valid_args:{self.valid_args}'''
     @property
     def batch_rank(self):
         return self.variables["x"][0].batch_rank
-    
-    @property
-    def output_dim(self):
-        return self.variables["x"][0].dim
 
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
@@ -221,6 +222,8 @@ valid_args:{self.valid_args}'''
     # Updating the block object:
 
     def _update(self, model):
+        self._data_dim = model.block.output_dim
+        
         # Valid permutation:
         
         if model.block.vocab is not None:
@@ -240,7 +243,7 @@ valid_args:{self.valid_args}'''
         self.linked_model = model    
         self.set_input_dim()
         self.update_model(model)
-        model.block.variables = self.variables
+        self.output_dim = model.block.output_dim.copy()
         
     def update_model(self, model):
         # Layer specific changes to models
@@ -261,7 +264,7 @@ valid_args:{self.valid_args}'''
                            "{}: ".format(self.description),
                            tuple(self.input_dim),
                            " -> ",
-                           tuple(self.output_dim)])
+                           tuple(block.output_dim)])
         if hidden:
             block.add_forward(
                 ["forward", "x, h{} = ".format(ind),
@@ -285,7 +288,7 @@ valid_args:{self.valid_args}'''
                            "{}: ".format(self.description),
                            tuple(self.input_dim),
                            " -> ",
-                           tuple(self.output_dim)])
+                           tuple(block.output_dim)])
         block.add_forward(
             ["forward", "x = ", "self.{}{}".format(self.layer_type, ind), "(x)"])
 
