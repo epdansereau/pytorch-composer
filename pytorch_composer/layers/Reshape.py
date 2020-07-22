@@ -39,7 +39,7 @@ class Reshape(Layer):
             pool = pool(tuple(pool_args), None, model)
             model.block.add_forward(
                 ["reshape", "x = x.view{}".format(tuple(reshape_dim))])
-            pool.update_model(model)
+            pool._update(model)
             model.block.variables.update_x(out)
         else:
             model.block.variables.update_x(res_dims[-1])        

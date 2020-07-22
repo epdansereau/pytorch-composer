@@ -2,7 +2,6 @@
 import math
 import warnings
 import pytorch_composer
-from pytorch_composer.CodeSection import Vars
 
 
 class Layer():
@@ -25,10 +24,10 @@ class Layer():
         self.dimension_arg = dimension_arg
         self.other_args = other_args
         
-        self._linked_model = data
+        if data is not None:
+            self.data = data
         
         self.layer_type = layer_type
-        self.set_input_dim()
         self.nn = nn
         self.description = description
         
@@ -49,38 +48,25 @@ class Layer():
         
         self.spaces = spaces
         
-    @property
-    def linked_model(self):
-        if not isinstance(self._linked_model, pytorch_composer.Model):
-            self._linked_model = self.new_model(self._linked_model)
-        return self._linked_model
-    
-    @linked_model.setter
-    def linked_model(self, data):
-        self._linked_model = data
+    def set_input_dim(self, model):
+        self.input_dim = model.block.output_dim.copy()
         
-    def set_input_dim(self):
-        self.input_dim = self.linked_model.block.output_dim.copy()
-        
-    def __call__(self, variables = None, batch_rank = None):
-        return self.layer_model(variables, batch_rank)
+    def __call__(self, data = None, batch_rank = None):
+        if data is None:
+            data = self.data
+        return self.layer_model(data, batch_rank)
     
     def __repr__(self):
         return f'''{self.__class__.__name__}: 
-variables:{self.variables}
 dimension_arg:{self.dimension_key}:{str(self.dimension_arg)}:
 other_args:{self.other_args}
 active_args:{self.active_args}
 valid_args:{self.valid_args}'''
     
-    def new_model(self, data_dim = None):
-        if data_dim is None:
-            data_dim = self.default_dim()
-        return pytorch_composer.Model([],data_dim,self.default_batch_rank())
-    
-    @property
-    def variables(self):
-        return self.linked_model.block.variables
+    def new_model(self, data = None):
+        if data is None:
+            data = self.default_dim()
+        return pytorch_composer.Model([],data,self.default_batch_rank())
     
     @property
     def layer_model(self):
@@ -90,15 +76,15 @@ valid_args:{self.valid_args}'''
         return model
     
     @property
-    def data_dim(self):
-        if self._data_dim is None:
+    def data(self):
+        if self._data is None:
             return self.default_dim()
         else:
-            return self._data_dim
+            return self._data
         
-    @data_dim.setter
-    def data_dim(self, data_dim):
-        self._data_dim = data_dim
+    @data.setter
+    def data(self, data):
+        self._data = data
     
     def get_batch_code(self):
         return self.layer_model.get_batch_code()
@@ -106,10 +92,6 @@ valid_args:{self.valid_args}'''
     # Main loop:
 
     # Valid permutation:
-    
-    @property
-    def batch_rank(self):
-        return self.variables["x"][0].batch_rank
 
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
@@ -222,7 +204,7 @@ valid_args:{self.valid_args}'''
     # Updating the block object:
 
     def _update(self, model):
-        self._data_dim = model.block.output_dim
+        self.data = model.block.output_dim
         
         # Valid permutation:
         
@@ -239,9 +221,8 @@ valid_args:{self.valid_args}'''
         valid_input_dims = self.valid_input_dims(
             model.block.output_dim, model.block.batch_rank)
         if valid_input_dims is not model.block.output_dim:
-            model.update("Reshape", valid_input_dims)
-        self.linked_model = model    
-        self.set_input_dim()
+            model.update("Reshape", valid_input_dims)  
+        self.set_input_dim(model)
         self.update_model(model)
         self.output_dim = model.block.output_dim.copy()
         
