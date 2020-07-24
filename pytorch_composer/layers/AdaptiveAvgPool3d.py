@@ -1,5 +1,5 @@
 from pytorch_composer.Layer import Layer
-
+import numpy as np
 
 class AdaptiveAvgPool3d(Layer):
 

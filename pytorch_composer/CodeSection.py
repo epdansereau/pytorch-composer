@@ -14,7 +14,7 @@ class Variable:
         self.vocab = Vocab.create(vocab)
         
     def __repr__(self):
-        return str(tuple([self.name,self.dim,self.batch_rank]))
+        return str(tuple([self.name,self.dim,self.batch_rank,self.vocab]))
     
 class Vars:
 
@@ -31,7 +31,14 @@ class Vars:
         return item in self.vars
 
     def __repr__(self):
-        return "Vars({})".format("\n     ".join([str(key) + ":" + str(val) for key, val in self.vars.items()]))
+        str_ = "Vars(\n"
+        for key, val in self.vars.items():
+            str_ += "  " + str(key) + ":[\n"
+            for v in val:
+                str_ += "    " + str(v) + "\n"
+            str_ += "  ]\n"
+        str_ += ")"
+        return str_
         
     def names(self, type_):
         return [v.name for v in self[type_]]
@@ -62,12 +69,12 @@ class Vars:
     def update_vocab(self, type_, ind, new_vocab):
         self[type_][ind].vocab = Vocab.create(new_vocab)
         
-    def update_x(self,dim = None,batch_rank = None, vocab = None, ind = 0):
+    def update_x(self,dim = None,batch_rank = None, vocab = False, ind = 0):
         if dim is not None:
             self.update_dim("x",ind,dim)
         if batch_rank is not None:
             self.update_batch_rank("x",ind,batch_rank)
-        if vocab is not None:
+        if vocab is not False:
             self.update_vocab("x",ind,vocab)   
 
 class SettingsDict(dict):
@@ -103,6 +110,10 @@ class Vocab:
             self.size = len(classes)
         self.embed_dim = embed_dim
         self.weights = weights
+        
+    def __repr__(self):
+        return f"Vocab(classes = {self.classes}, size = {self.size}, embed_dim = {self.embed_dim}, " + \
+               f"weights = {self.weights})"
         
     @classmethod
     def create(cls, args):

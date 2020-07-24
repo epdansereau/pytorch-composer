@@ -16,6 +16,7 @@ class Layer():
                  dimension_key = "",
                  required_args = None,
                  kw_args = None,
+                 is_embed = False,
                  spaces = None
                 ):
         if other_args is None:
@@ -47,15 +48,18 @@ class Layer():
         self.required_args = required_args
         self.kw_args = kw_args
         
+        self.is_embed = is_embed
+        
         self.spaces = spaces
         
     def set_input_dim(self, model):
         self.input_dim = model.block.output_dim.copy()
+        self.vocab = model.block.vocab
         
     def __call__(self, data = None, batch_rank = None):
-        if data is None:
-            data = self.data
-        return self.layer_model(data, batch_rank)
+        if data is not None:
+            self.data = data
+        return self.layer_model(self.data, batch_rank)
     
     def __repr__(self):
         return f'''{self.__class__.__name__}({str(self.dimension_arg)},{self.other_args})'''
@@ -67,6 +71,7 @@ class Layer():
     def layer_model(self):
         # Single layer model
         model = self.new_model()
+        self.vocab = model.block.vocab
         self.update(model)
         return model
     
@@ -84,9 +89,38 @@ class Layer():
     def get_batch_code(self):
         return self.layer_model.get_batch_code()
 
-    # Main loop:
+    def _update(self, model):
+        self.data = model.block.output_dim
+        
+        # Valid permutation:
+        
+        if model.block.vocab is not None:
+            if not self.is_embed:
+                if model.block.variables["x"][0].vocab.weights is None:
+                    model.update("Embedding")
+                else:
+                    model.update("EmbeddingFromPretrained")
 
-    # Valid permutation:
+        permutation = self.permutation(
+            model.block.output_dim, model.block.batch_rank, self.other_args)
+        if permutation:
+            model.update("permute", permutation)
+            
+        valid_input_dims = self.valid_input_dims(
+            model.block.output_dim, model.block.batch_rank)
+        if valid_input_dims is not model.block.output_dim:
+            model.update("Reshape", valid_input_dims)
+        self.set_input_dim(model)
+        self.update_model(model)
+        self.output_dim = model.block.output_dim.copy()
+        
+    def update_model(self, model):
+        # Layer specific changes to models
+        pass      
+        
+    def update(self, model):
+        self._update(model)
+        model.layers.append(self)
 
     @staticmethod
     def required_batch_rank(data_dim, data_rank, args):
@@ -195,39 +229,6 @@ class Layer():
             all_args.append(", ".join(kw_code))
         all_args = ", ".join(all_args)
         return all_args
-
-    # Updating the block object:
-
-    def _update(self, model):
-        self.data = model.block.output_dim
-        
-        # Valid permutation:
-        
-        if model.block.vocab is not None:
-            model.update("Embedding")
-
-        permutation = self.permutation(
-            model.block.output_dim, model.block.batch_rank, self.other_args)
-        if permutation:
-            model.update("permute", permutation)
-
-        # Valid input dimensions:
-
-        valid_input_dims = self.valid_input_dims(
-            model.block.output_dim, model.block.batch_rank)
-        if valid_input_dims is not model.block.output_dim:
-            model.update("Reshape", valid_input_dims)  
-        self.set_input_dim(model)
-        self.update_model(model)
-        self.output_dim = model.block.output_dim.copy()
-        
-    def update_model(self, model):
-        # Layer specific changes to models
-        pass      
-        
-    def update(self, model):
-        self._update(model)
-        model.layers.append(self)
     
     def add_unique_layer(self, block, hidden=False):
         # Updates the block when the layer should not be reused in the forward function (i.e. when the

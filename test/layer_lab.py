@@ -118,6 +118,7 @@ def test_layers(layer_types, verbose = "default"):
 
 layer_types = layers_list
 layer_types.remove("Embedding")
+layer_types.remove("EmbeddingFromPretrained")
 
 if __name__ == "__main__":
     test_layers(layer_types)

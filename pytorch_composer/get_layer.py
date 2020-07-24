@@ -13,6 +13,7 @@ from .layers import RNN
 from .layers import permute
 
 from .layers import Embedding
+from .layers import EmbeddingFromPretrained
 
 # The classes for all the types of layers are saved in a dictionary. The key is the name of the classes.
 # Example:

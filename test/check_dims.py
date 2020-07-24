@@ -89,7 +89,7 @@ def number_lines(code):
 def test(sequence, long = False):
     ''' The accuracy should always be 100% '''
     if long:
-        dataset = pytorch_composer.datasets.RandDataset({"shape":[29, 1, 11, 10]})
+        dataset = pytorch_composer.datasets.RandLongDataset({"shape":[29, 1, 11, 10]})
     else:
         dataset = pytorch_composer.datasets.RandDataset()
     model = pytorch_composer.Model(sequence, dataset)
