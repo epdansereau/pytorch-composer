@@ -97,19 +97,19 @@ class Layer():
         if model.block.vocab is not None:
             if not self.is_embed:
                 if model.block.variables["x"][0].vocab.weights is None:
-                    model.update("Embedding")
+                    model.update_layers("Embedding")
                 else:
-                    model.update("EmbeddingFromPretrained")
+                    model.update_layers("EmbeddingFromPretrained")
 
         permutation = self.permutation(
             model.block.output_dim, model.block.batch_rank, self.other_args)
         if permutation:
-            model.update("permute", permutation)
+            model.update_layers("permute", permutation)
             
         valid_input_dims = self.valid_input_dims(
             model.block.output_dim, model.block.batch_rank)
         if valid_input_dims is not model.block.output_dim:
-            model.update("Reshape", valid_input_dims)
+            model.update_layers("Reshape", valid_input_dims)
         self.set_input_dim(model)
         self.update_model(model)
         self.output_dim = model.block.output_dim.copy()

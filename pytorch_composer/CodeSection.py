@@ -275,7 +275,7 @@ class CodeSection:
     def set_default_variables(self):
         pass
     
-    def set_variables(self, variables):
+    def set_variables(self, variables, batch_rank = None, vocab = False):
         if variables is None:
             self.variables  = Vars({})
             self.set_default_variables()
@@ -283,8 +283,13 @@ class CodeSection:
             self.variables = variables.copy()
         elif isinstance(variables, CodeSection):
             self.variables = variables.variables.copy()
+#         elif isinstance(variables, list):
+#             self.variables  = Vars({})
+#             self.variables.add_variable("x",variables)
         else:
             raise ValueError
+#         self.variables.update_x(batch_rank = batch_rank, vocab = vocab)
+            
             
     @staticmethod
     def write_imports(imports):

@@ -155,7 +155,7 @@ class Model(CodeSection):
         data = self.parse_data(data, batch_rank)
         super().__init__(data, defaults = defaults, imports = imports, returns = returns)
         
-    def __call__(self, input_ = None, batch_rank = None):
+    def __call__(self, input_ = None, batch_rank = None, vocab = False):
         data_dim = self.parse_data(input_, batch_rank)
         self.set_variables(data_dim)
         if isinstance(input_, list):
@@ -200,7 +200,7 @@ class Model(CodeSection):
         for layer in self.layers:
             layer._update(self)
         
-    def update(self, layer_type, dimension_arg=None, other_args=None):
+    def update_layers(self, layer_type, dimension_arg=None, other_args=None):
         layer = get_layer(layer_type)(dimension_arg, other_args)
         layer._update(self)
         
@@ -215,9 +215,9 @@ class Model(CodeSection):
             vocab = output_dim[-1]
             output_dim[-1] = -1
         if output_dim is not self.block.output_dim:
-            self.update("Reshape", output_dim)
+            self.update_layers("Reshape", output_dim)
             if vocab is not None:
-                self.update("Linear", vocab)
+                self.update_layers("Linear", vocab)
             self.block.code = self.block.parsed_code
         return self
     
