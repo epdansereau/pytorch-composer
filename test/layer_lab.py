@@ -6,8 +6,12 @@ from pytorch_composer.get_layer import get_layer, layers_list
 
 import pytorch_composer
 
+from pytorch_composer.CodeSection import Vars
+
+import torch
+
 class RandomLayor:
-    def __init__(self):
+    def __init__(self, layer_types):
         self.max_int = 10
         
         self.max_list = 5
@@ -15,6 +19,8 @@ class RandomLayor:
         self.x10prob = 0.05
         self.critical_prob = 0.05
         self.none_prob = 0.25
+        
+        self.layer_types = layer_types
         
         self.space_dict = {
             "n":self.rand_n,
@@ -57,7 +63,11 @@ class RandomLayor:
             list_.append(self.rand_n())
         return list_
     
-    def rand(self,type_):
+    def rand(self,type_ = None):
+        if type_ is None:
+            type_ = self.layer_types
+        if isinstance(type_, list):
+            type_ = choice(self.layer_types)
         none_prob = self.none_prob
         dim_none_prob = self.none_prob
         layer = get_layer(type_)()
@@ -69,7 +79,28 @@ class RandomLayor:
         else:
             dimension_arg = None
         return [type_, dimension_arg, other_args]
+    
+    def rand_input_shape(self):
+        return self.rand_list(min_ = 2)
+    
+def rand_input(input_shape = None):
+    if input_shape is None:
+        input_shape = r.rand_input_shape()
+    prob = random()
+    if prob < 0.3333:
+        return input_shape
+    elif prob < 0.6666:
+        return rand(input_shape)
+    else:
+        v = Vars({})
+        v.add_variable("x",input_shape)
+        return v
+            
+layer_types = layers_list
+layer_types.remove("Embedding")
+layer_types.remove("EmbeddingFromPretrained")
 
+r = RandomLayor(layer_types)
     
 def test_layer(layer_type,
                dim = 30,
@@ -77,13 +108,13 @@ def test_layer(layer_type,
                input_shape = None,
                verbose = False):
     if input_shape is None:
-        input_shape = [5,38,10]
-    t = rand(input_shape)
+        input_shape = r.rand_input_shape()
+    input_ = rand_input(input_shape)
     LayerClass = get_layer(layer_type)
     if isinstance(dim, list):
         dim = tuple(dim)
     layer = LayerClass(dim, other_args)
-    output = layer(t)
+    output = layer(input_)
     if isinstance(output, tuple):
         output = output[0]
     shape = list(output.shape)
@@ -102,23 +133,25 @@ def test_layers(layer_types, verbose = "default"):
             verbose = True
         else:
             verbose = False 
-    r = RandomLayor()
+    r = RandomLayor(layer_types)
     
     pytorch_composer.warnings_off()
     for layer_type in layer_types:
         for _ in range(50):
-            layer = [*r.rand(layer_type), r.rand_list(min_ = 2)]
+            layer = [*r.rand(layer_type), r.rand_input_shape()]
             if verbose:
                 print(layer)
             test_layer(*layer, verbose = verbose)
         print("Tested", layer_type)
 
     print("All tests passed")
+    
 
-
-layer_types = layers_list
-layer_types.remove("Embedding")
-layer_types.remove("EmbeddingFromPretrained")
+def rand_layer():
+    rand = r.rand(layer_types)
+    LayerClass = get_layer(rand[0])
+    return LayerClass(rand[1], rand[2])
+    
 
 if __name__ == "__main__":
     test_layers(layer_types)
