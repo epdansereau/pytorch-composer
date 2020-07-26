@@ -54,12 +54,16 @@ class Layer():
         
     def set_input_dim(self, model):
         self.input_dim = model.block.output_dim.copy()
-        self.vocab = model.block.vocab
+        if model.block.vocab is None:
+            self.vocab = None
+        else:
+            self.vocab = model.block.vocab.copy()
         
     def __call__(self, data = None, batch_rank = None):
         if data is not None:
             self.data = data
-        return self.layer_model(self.data, batch_rank)
+        layer_model = self.layer_model
+        return layer_model(self.data, batch_rank)
     
     def __repr__(self):
         return f'''{self.__class__.__name__}({str(self.dimension_arg)},{self.other_args})'''
@@ -71,7 +75,6 @@ class Layer():
     def layer_model(self):
         # Single layer model
         model = self.new_model()
-        self.vocab = model.block.vocab
         self.update(model)
         return model
     
@@ -90,7 +93,6 @@ class Layer():
         return self.layer_model.get_batch_code()
 
     def _update(self, model):
-        self.data = model.block.output_dim
         
         # Valid permutation:
         

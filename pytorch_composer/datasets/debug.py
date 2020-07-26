@@ -67,7 +67,7 @@ class Rand:
         self.range = ${range}
         
     def __getitem__(self, i):
-        return torch.randint(0,self.range - 1,self.shape), torch.randint(${classes},[1])[0]
+        return torch.randint(0, self.range, self.shape), torch.randint(${classes},[1])[0]
         
     def __len__(self):
         return ${len}

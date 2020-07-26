@@ -160,6 +160,13 @@ class Model(CodeSection):
         self.set_variables(data_dim)
         if isinstance(input_, list):
             input_ = torch.rand(input_)
+        elif input_ is None:
+            input_ = torch.rand(self.default_dim)
+        elif not isinstance(input_, torch.Tensor):
+            if input_.vocab is None:
+                input_ = torch.rand(input_.output_dim)
+            else:
+                input_ = torch.randint(0, input_.vocab.size, input_.output_dim)
         env = {"x":input_}
         return self.execute(self.get_batch_code(), self.returns, env)
     

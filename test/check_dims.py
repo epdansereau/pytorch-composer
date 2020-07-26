@@ -117,12 +117,15 @@ test_result = {}
     print('accuracy:', result)
     return result
 
+def check_dims():    
+    print("TEST1")
+    test1 = test(sequence1)
+    print()
+    print("TEST2")
+    test2 = test(sequence2, long = True)
+    print()
+    print("1:", test1)
+    print("2:", test2)
 
-print("TEST1")
-test1 = test(sequence1)
-print()
-print("TEST2")
-test2 = test(sequence2, long = True)
-print()
-print("1:", test1)
-print("2:", test2)
+if __name__ == "__main__":
+    check_dims()

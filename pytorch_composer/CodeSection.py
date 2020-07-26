@@ -51,6 +51,10 @@ class Vars:
     def batch_rank(self):
         return self["x"][0].batch_rank
     
+    @property
+    def vocab(self):
+        return self["x"][0].vocab
+    
     def copy(self):
         return copy.deepcopy(self)
     
@@ -119,12 +123,17 @@ class Vocab:
     def create(cls, args):
         if isinstance(args,list):
             return cls(args)
+        elif isinstance(args,int):
+            return cls([x for x in range(args)])
         elif isinstance(args,cls) or args is None:
             return args
         elif isinstance(args,dict):
             return cls(**args)
         else:
             raise TypeError
+            
+    def copy(self):
+        return copy.deepcopy(self)
 
 class ComposerError(Exception):
     @staticmethod
@@ -256,6 +265,9 @@ class CodeSection:
     
     def unlink(self):
         self.linked_to = None
+        
+    def copy(self):
+        return copy.deepcopy(self)
         
     def update(self, settings = None):
         if settings:

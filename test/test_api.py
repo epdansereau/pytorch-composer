@@ -37,31 +37,36 @@ def check(code, batch_size):
     print("asserted " + str(batch_size))
     code()
     print("executed " + str(batch_size))
+
     
-for _ in range(2):    
-    code["batch_size"] = 6
-    check(code, 6)
-    code.update({"batch_size":8})
-    check(code, 8)
-    code[0]["batch_size"] = 9
-    check(code, 9)
-    code[0].update({"batch_size":5})
-    check(code, 5)
-    code.settings["batch_size"] = 13
-    check(code, 13)
-    code.settings.update({"batch_size":14})
-    check(code, 14)
-    code[0].settings["batch_size"] = 3
-    check(code, 3)
-    code[0].settings.update({"batch_size":17})
-    check(code, 17)
-    settings = code[0].settings.copy()
-    settings["batch_size"] = 15
-    code[0].settings = settings
-    check(code, 15)
-    settings = code.settings.copy()
-    settings["batch_size"] = 12
-    code.settings = settings
-    check(code, 12)
-               
-print("All tests passed")
+def test_api():
+    for _ in range(2):    
+        code["batch_size"] = 6
+        check(code, 6)
+        code.update({"batch_size":8})
+        check(code, 8)
+        code[0]["batch_size"] = 9
+        check(code, 9)
+        code[0].update({"batch_size":5})
+        check(code, 5)
+        code.settings["batch_size"] = 13
+        check(code, 13)
+        code.settings.update({"batch_size":14})
+        check(code, 14)
+        code[0].settings["batch_size"] = 3
+        check(code, 3)
+        code[0].settings.update({"batch_size":17})
+        check(code, 17)
+        settings = code[0].settings.copy()
+        settings["batch_size"] = 15
+        code[0].settings = settings
+        check(code, 15)
+        settings = code.settings.copy()
+        settings["batch_size"] = 12
+        code.settings = settings
+        check(code, 12)
+
+    print("All tests passed")
+    
+if __name__ == "__main__":
+    test_api()
