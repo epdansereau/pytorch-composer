@@ -86,12 +86,14 @@ def number_lines(code):
     return with_number
 
 
-def test(sequence, long = False):
+def test(sequence, datatype = "float"):
     ''' The accuracy should always be 100% '''
-    if long:
-        dataset = pytorch_composer.datasets.RandLongDataset({"shape":[29, 1, 11, 10]})
-    else:
+    if datatype == "float":
         dataset = pytorch_composer.datasets.RandDataset()
+    elif datatype == "int":
+        dataset = pytorch_composer.datasets.RandLongDataset()
+    elif datatype == "pretrained":
+        dataset = pytorch_composer.datasets.RandPretrainedDataset()
     model = pytorch_composer.Model(sequence, dataset)
     loop = Loop(model)
     debug_code = '''
@@ -122,10 +124,14 @@ def check_dims():
     test1 = test(sequence1)
     print()
     print("TEST2")
-    test2 = test(sequence2, long = True)
+    test2 = test(sequence2, datatype = "int")
     print()
+    print("TEST3")
+    test3 = test(sequence2, datatype = "pretrained")
+    print()    
     print("1:", test1)
     print("2:", test2)
+    print("3:", test3)
 
 if __name__ == "__main__":
     check_dims()

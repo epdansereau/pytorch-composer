@@ -155,7 +155,7 @@ class Model(CodeSection):
         data = self.parse_data(data, batch_rank)
         super().__init__(data, defaults = defaults, imports = imports, returns = returns)
         
-    def __call__(self, input_ = None, batch_rank = None, vocab = False):
+    def __call__(self, input_ = None, batch_rank = None, vocab = False, weights = None):
         data_dim = self.parse_data(input_, batch_rank)
         self.set_variables(data_dim)
         if isinstance(input_, list):
@@ -168,6 +168,8 @@ class Model(CodeSection):
             else:
                 input_ = torch.randint(0, input_.vocab.size, input_.output_dim)
         env = {"x":input_}
+        if weights is not None:
+            env["pretrained_weights"] = weights
         return self.execute(self.get_batch_code(), self.returns, env)
     
     def parse_data(self, data, batch_rank):

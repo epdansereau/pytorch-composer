@@ -59,11 +59,11 @@ class Layer():
         else:
             self.vocab = model.block.vocab.copy()
         
-    def __call__(self, data = None, batch_rank = None):
+    def __call__(self, data = None, batch_rank = None, weights = None):
         if data is not None:
-            self.data = data
+            self.data = data  
         layer_model = self.layer_model
-        return layer_model(self.data, batch_rank)
+        return layer_model(self.data, batch_rank, weights = weights)
     
     def __repr__(self):
         return f'''{self.__class__.__name__}({str(self.dimension_arg)},{self.other_args})'''

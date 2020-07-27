@@ -36,6 +36,8 @@ class RandomLayor:
             return sample(space, 1)
         elif isinstance(space,tuple):
             return self.space_dict[space[0]](*space[1:])
+        elif space == 'pretrained_weights':
+            return 'pretrained_weights'
         else:
             return self.space_dict[space]()
     
@@ -88,9 +90,9 @@ class RandomLayor:
         return self.rand_list(min_ = 2)
             
 layer_types = layers_list
-layer_types.remove("EmbeddingFromPretrained")
 layer_types_all = layer_types.copy()
 layer_types.remove("Embedding")
+layer_types.remove("EmbeddingFromPretrained")
 
 r = RandomLayor(layer_types)
     
@@ -102,15 +104,18 @@ def test_layer(layer_type,
               ):
     if input_shape is None:
         input_shape = r.rand_input_shape()
+    weights = None
     if layer_type == "Embedding":
         input_ = rand_embed(input_shape)
+    elif layer_type == "EmbeddingFromPretrained":
+        input_, weights = rand_pretrained(input_shape)
     else:
         input_ = rand_input(input_shape)
     LayerClass = get_layer(layer_type)
     if isinstance(dim, list):
         dim = tuple(dim)
     layer = LayerClass(dim, other_args)
-    output = layer(input_)
+    output = layer(input_, weights = weights)
     if isinstance(output, tuple):
         output = output[0]
     shape = list(output.shape)
@@ -174,7 +179,19 @@ def rand_embed(input_shape = None, vocab_size = None):
     v = Vars({})
     v.add_variable("x",input_shape,vocab = Vocab.create(vocab_size))
     return v
-    
+
+def rand_pretrained(input_shape = None, vocab_size = None, embed_dim = None):
+    if input_shape is None:
+        input_shape = r.rand_input_shape()
+    if  vocab_size is None:
+        vocab_size = r.rand_n()
+    if  embed_dim is None:
+        embed_dim = r.rand_n()
+    v = Vars({})
+    v.add_variable("x",input_shape,vocab = Vocab.from_pretrained("pretrained_weights",[vocab_size,embed_dim]))
+    weights = torch.rand([vocab_size,embed_dim])
+    return v, weights
+        
 def rand_input_shape():
     return r.rand_input_shape()
 

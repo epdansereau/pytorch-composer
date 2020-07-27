@@ -24,7 +24,9 @@ class EmbeddingFromPretrained(Layer):
                 dimension_key = "embeddings",
                 required_args = ['embeddings'],
                 kw_args = ['freeze', 'padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse'],
-                spaces = {},
+                spaces = {
+                    'embeddings':'pretrained_weights',
+                },
                 is_embed = True
         )   
             

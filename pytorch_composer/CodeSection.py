@@ -132,6 +132,10 @@ class Vocab:
         else:
             raise TypeError
             
+    @classmethod
+    def from_pretrained(cls, weights_name, weights_shape):
+        return cls(size = weights_shape[0], embed_dim = weights_shape[-1], weights = weights_name)        
+            
     def copy(self):
         return copy.deepcopy(self)
 

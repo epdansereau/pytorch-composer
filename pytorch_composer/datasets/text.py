@@ -214,7 +214,9 @@ testloader = Loader(batchify(test_txt, eval_batch_size))
         if self["embedding"] is None:
             vocab = {"size":"len(TEXT.vocab)"}
         else:
-            vocab = {"size":"len(TEXT.vocab)","embed_dim":get_emb_dim(self["embedding"]), "weights":"TEXT.vocab.vectors"}
+            vocab = {"size":"TEXT.vocab.vectors.shape[0]",
+                     "embed_dim":get_emb_dim(self["embedding"]),
+                     "weights":"TEXT.vocab.vectors"}
         self.variables.add_variable("x",
                                     [self["bptt"], self["batch_size"]],
                                     1,
