@@ -7,46 +7,7 @@ import traceback
 
 from layer_lab import rand_layers
 
-sequence1 = [
-    ["Conv2d", 6],
-    ["MaxPool2d", 2],
-    ["Linear", 52],
-    ["Relu"],
-    ["MaxPool2d", 2],
-    ["Linear", 43],
-    ["MaxPool2d", 2],
-    ["Conv2d", 65],
-    ["MaxPool2d", 2],
-    ["Conv2d", 47],
-    ["Flat"],
-    ["Linear", 52],
-    ["Relu"],
-    ["Linear", 38],
-    ["Conv2d", 8],
-    ["MaxPool2d", 2],
-    ["Conv2d", 47],
-    ["Flat"],
-    ["MaxPool2d", 2],
-    ["Linear", 12],
-    ["AdaptiveAvgPool1d", 122],
-    ["Linear", 53],
-    ["Conv2d", 65],
-    ["AdaptiveAvgPool2d", 100],
-]
-sequence2 = [
-    ['RNN', 29, {'input_size': 18, 'hidden_size': 30}],
-    ["MaxPool2d", 2],
-    ["Linear", 52],
-    ["MaxPool2d", 2],
-    ["RNN", 24],
-    ["MaxPool2d", 2],
-    ["Conv2d", 65],
-    ["MaxPool2d", 2],
-    ["Conv2d", 12],
-    ["RNN", 24],
-    ["Relu"],
-]
-
+import sys
 
 def add_dims_check(code):
     '''Adds a test after each comment about dimensions, and after the next forward function that changes
@@ -88,7 +49,7 @@ def number_lines(code):
     return with_number
 
 
-def test_dims(sequence, datatype = "float", verbose = True):
+def test_dims(sequence, datatype = "float", verbose = False):
     ''' The accuracy should always be 100% '''
     if verbose:
         print(sequence)
@@ -127,19 +88,20 @@ test_result = {}
     assert correct == len(test_result)
     return result
 
-def check_dims():    
+def check_dims(verbose = False):    
     print("TEST1")
     for _ in range(50):
-        test_dims(rand_layers())
+        test_dims(rand_layers(), verbose = verbose)
     print()
     print("TEST2")
     for _ in range(50):
-        test_dims(rand_layers(), datatype = "int")
+        test_dims(rand_layers(), datatype = "int", verbose = verbose)
     print()
     print("TEST3")
     for _ in range(50):
-        test_dims(rand_layers(), datatype = "pretrained")
+        test_dims(rand_layers(), datatype = "pretrained", verbose = verbose)
     print()
 
 if __name__ == "__main__":
-    check_dims()
+    verbose =  "-verbose" in sys.argv
+    check_dims(verbose = verbose)
