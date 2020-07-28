@@ -195,6 +195,15 @@ def rand_pretrained(input_shape = None, vocab_size = None, embed_dim = None):
 def rand_input_shape():
     return r.rand_input_shape()
 
+def rand_layers():
+    layers = []
+    for _ in range(r.rand_n(20)):
+        layer = r.rand()
+        if isinstance(layer[1], list):
+            layer[1] = tuple(layer[1])
+        layers.append(layer)
+    return layers
+
 ### property tests
 
 def test_property_1(num = 30):
@@ -255,3 +264,6 @@ def layer_lab():
     test_layers(layer_types_all)
     test_property_1()
     test_property_2()
+    
+if __name__ == "__main__":
+    layer_lab()

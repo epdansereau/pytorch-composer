@@ -5,6 +5,8 @@ from pytorch_composer.loops import Loop
 import pytorch_composer.datasets
 import traceback
 
+from layer_lab import rand_layers
+
 sequence1 = [
     ["Conv2d", 6],
     ["MaxPool2d", 2],
@@ -86,8 +88,11 @@ def number_lines(code):
     return with_number
 
 
-def test(sequence, datatype = "float"):
+def test_dims(sequence, datatype = "float", verbose = True):
     ''' The accuracy should always be 100% '''
+    if verbose:
+        print(sequence)
+    
     if datatype == "float":
         dataset = pytorch_composer.datasets.RandDataset()
     elif datatype == "int":
@@ -104,34 +109,37 @@ test_result = {}
     # adding test code:
     code[0].template = debug_code + code[0].template
     code[1].block.code = add_dims_check(code[1].block.code)
-    print(code)
+    if verbose:
+        print(code)
     test_result = code(returns = ["test_result"])
 
     correct = 0
     for line in test_result:
         if test_result[line][0] == test_result[line][1]:
-            print(test_result[line])
+            if verbose:
+                print(test_result[line])
             correct += 1
         else:
-            print(test_result[line], "Mismatch!")
-    print()
+            if verbose:
+                print(test_result[line], "Mismatch!")
     result = f'{correct} / {len(test_result)}'
     print('accuracy:', result)
+    assert correct == len(test_result)
     return result
 
 def check_dims():    
     print("TEST1")
-    test1 = test(sequence1)
+    for _ in range(50):
+        test_dims(rand_layers())
     print()
     print("TEST2")
-    test2 = test(sequence2, datatype = "int")
+    for _ in range(50):
+        test_dims(rand_layers(), datatype = "int")
     print()
     print("TEST3")
-    test3 = test(sequence2, datatype = "pretrained")
-    print()    
-    print("1:", test1)
-    print("2:", test2)
-    print("3:", test3)
+    for _ in range(50):
+        test_dims(rand_layers(), datatype = "pretrained")
+    print()
 
 if __name__ == "__main__":
     check_dims()
