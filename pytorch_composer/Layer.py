@@ -17,7 +17,7 @@ class Layer():
                  required_args = None,
                  kw_args = None,
                  is_embed = False,
-                 spaces = None
+                 spaces = None,
                 ):
         if other_args is None:
             other_args = {}
@@ -51,6 +51,10 @@ class Layer():
         self.is_embed = is_embed
         
         self.spaces = spaces
+        
+    @staticmethod
+    def has_weights():
+        return False
         
     def set_input_dim(self, model):
         self.input_dim = model.block.output_dim.copy()

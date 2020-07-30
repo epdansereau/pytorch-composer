@@ -261,11 +261,18 @@ class CodeSection:
     
     @property
     def active_settings(self):
+        # dictionary valid settings from settings provided by the user 
         return self.settings
     
     @property
     def template_settings(self):
+        # dictionary of strings to be substituted into the code template
         return {arg:defaultdict(str,self.active_settings)[arg] for arg in self.template_keys}
+       
+    @property
+    def code(self):
+        # final string of code to be executed
+        return Template(self.template).substitute(self.template_settings)
     
     def unlink(self):
         self.linked_to = None
@@ -316,10 +323,6 @@ class CodeSection:
             if isinstance(import_, tuple):
                 code += "from " + import_[0] + " import " + import_[1] +"\n"
         return code
-    
-    @property
-    def code(self):
-        return Template(self.template).substitute(self.template_settings)
     
     @property
     def str_(self):

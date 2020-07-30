@@ -17,7 +17,7 @@ class AdaptiveAvgPool3d(Layer):
                  kw_args = [],
                  spaces = {
                     'output_size':('list',3),
-                }
+                },
         )
 
     # Main loop:

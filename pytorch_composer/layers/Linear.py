@@ -21,8 +21,12 @@ class Linear(Layer):
                     'in_features':'n',
                     'out_features':'n',
                     'bias':'bool', 
-                 }
+                 },
         )
+        
+    @staticmethod
+    def has_weights():
+        return True
 
     # Main loop:
 

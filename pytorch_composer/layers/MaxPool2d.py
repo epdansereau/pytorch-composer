@@ -30,7 +30,7 @@ class MaxPool2d(Layer):
                     "ceil_mode"],
                  spaces = {
                     "kernel_size":"n",
-                 }
+                 },
         )
 
     # Main loop:

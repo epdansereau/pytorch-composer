@@ -4,7 +4,11 @@ from pytorch_composer.Layer import Layer
 class Flat(Layer):
 
     def __init__(self, dimension_arg = None, other_args = None, variables = None):
-        super().__init__(dimension_arg, other_args, variables, layer_type = "flat", description = "Flatenning the data")
+        super().__init__(dimension_arg,
+                         other_args,
+                         variables,
+                         layer_type = "flat",
+                         description = "Flatenning the data")
 
     # Main loop:
 

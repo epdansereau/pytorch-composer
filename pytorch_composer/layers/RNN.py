@@ -38,8 +38,12 @@ class RNN(Layer):
                     #"batch_first": "bool",    ######TBD
                     'dropout':'float',
                     #"bidirectional": "bool",  ######TBD
-                 }
+                 },
         )
+        
+    @staticmethod
+    def has_weights():
+        return True
 
     # Main loop:
 

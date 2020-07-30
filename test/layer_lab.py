@@ -1,7 +1,7 @@
 from pytorch_composer import get_layer, Model
 from torch import rand
 
-from random import randint, random, choice, sample
+from random import randint, random, choice, sample, shuffle
 from pytorch_composer.get_layer import get_layer, layers_list
 
 import pytorch_composer
@@ -73,7 +73,7 @@ class RandomLayor:
         if type_ is None:
             type_ = self.layer_types
         if isinstance(type_, list):
-            type_ = choice(self.layer_types)
+            type_ = choice(type_)
         none_prob = self.none_prob
         dim_none_prob = self.none_prob
         layer = get_layer(type_)()
@@ -93,6 +93,8 @@ layer_types = layers_list
 layer_types_all = layer_types.copy()
 layer_types.remove("Embedding")
 layer_types.remove("EmbeddingFromPretrained")
+
+trainable_layer_types = list(filter(lambda x: get_layer(x).has_weights(),layer_types))
 
 r = RandomLayor(layer_types)
     
@@ -197,11 +199,18 @@ def rand_input_shape():
 
 def rand_layers():
     layers = []
-    for _ in range(r.rand_n(20)):
+    # At least one trainable layer:
+    layer = r.rand(trainable_layer_types)
+    if isinstance(layer[1], list):
+        layer[1] = tuple(layer[1])
+    layers.append(layer)
+    # Other layers:
+    for _ in range(randint(0,20)):
         layer = r.rand()
         if isinstance(layer[1], list):
             layer[1] = tuple(layer[1])
         layers.append(layer)
+    shuffle(layers)
     return layers
 
 ### property tests

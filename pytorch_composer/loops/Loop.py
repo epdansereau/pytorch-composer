@@ -1,5 +1,6 @@
 from pytorch_composer.CodeSection import CodeSection
 from collections import defaultdict
+import pytorch_composer
 
 
 class Loop(CodeSection):
@@ -78,17 +79,10 @@ print('Finished Training')
             
         
     def require_input(self, input_ = None):
+        if not isinstance(input_, pytorch_composer.Model):
+            raise TypeError("Loop expected Model object as input")
+        if not any(layer.has_weights() for layer in input_.layers):
+            raise ValueError("The model must contain at least one trainable layers with weights to be trained")
         return input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
     
-'''
--> return input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
-(Pdb) ["x"][0].dim
-*** AttributeError: 'str' object has no attribute 'dim'
-(Pdb) input_.variables["x"][0].dim
-[4, 38]
-(Pdb) input_.variables["y"][0].dim
-[4]
-(Pdb) input_.variables["y"][0].dim + [input_.variables["y"][0].vocab.size]
-[4, 4]
-'''
 

@@ -34,8 +34,12 @@ class Conv2d(Layer):
                     "padding_mode"],
                  spaces = {
                     "out_channels":"n",
-                 }
+                 },
         )
+        
+    @staticmethod
+    def has_weights():
+        return True
         
     # Main loop:
 

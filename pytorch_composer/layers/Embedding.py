@@ -25,7 +25,11 @@ class Embedding(Layer):
                 kw_args = ['padding_idx', 'max_norm', 'norm_type', 'scale_grad_by_freq', 'sparse', '_weight'],
                 spaces = {"embedding_dim":"n"},
                 is_embed = True,
-        )  
+        )
+        
+    @staticmethod
+    def has_weights():
+        return True
 
     @property
     def valid_args(self):
