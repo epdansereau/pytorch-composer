@@ -109,7 +109,7 @@ class Layer():
 
         permutation = self.permutation(
             model.block.output_dim, model.block.batch_rank, self.other_args)
-        if permutation:
+        if permutation:            
             model.update_layers("permute", permutation)
             
         valid_input_dims = self.valid_input_dims(

@@ -29,7 +29,8 @@ class permute(Layer):
     def update_model(self, model):
         input_dim = model.block.output_dim
         out = [input_dim[x] for x in self.valid_args["dims"]]
-        model.block.variables.update_x(out, self.valid_args["dims"][model.block.batch_rank])
+        new_batch_rank = self.valid_args["dims"].index(model.block.batch_rank)
+        model.block.variables.update_x(out, new_batch_rank)
         if input_dim != model.block.output_dim:
             model.block.add_forward(
                 ["permute", "x = x.permute{}.contiguous()".format(tuple(self.valid_args["dims"]))])
