@@ -25,8 +25,13 @@ class AdaptiveAvgPool1d(Layer):
     # Valid permutation:
 
     @staticmethod
-    def required_batch_rank(data_dim, data_rank, args):
-        return 0
+    def required_batch_rank(data_dim, data_batch_rank, args):
+        # The transformation should not be applied on the batch rank, so the batch rank is
+        # moved to zero if it is in the last position
+        if data_batch_rank + 1 == len(data_dim):
+            return 0
+        else:
+            return None
 
     # Valid input dimensions:
 
@@ -58,3 +63,4 @@ class AdaptiveAvgPool1d(Layer):
         if len(input_dims) != 3:
             model.block.forward_function[-1][-1] = "(x.view{})".format(tuple(self.reshape_dims(input_dims)))
             model.block.forward_function[-1].append(".view{}".format(tuple(model.block.output_dim)))
+        

@@ -21,6 +21,13 @@ class Reshape(Layer):
                  }
         )
         
+    @staticmethod
+    def required_batch_rank(data_dim, data_batch_rank, args):
+        if data_batch_rank > 1:
+            return 0
+        else:
+            return data_batch_rank
+        
         
     def update_model(self, model):
         output_size = self.valid_args["output_size"]
@@ -42,7 +49,7 @@ class Reshape(Layer):
             pool._update(model)
             model.block.variables.update_x(out)
         else:
-            model.block.variables.update_x(res_dims[-1])        
+            model.block.variables.update_x(res_dims[-1])
 
         model.block.add_forward(
             ["reshape", "x = x.view{}".format(tuple(model.block.output_dim))])
