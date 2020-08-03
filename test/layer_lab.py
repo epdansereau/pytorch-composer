@@ -29,6 +29,7 @@ class RandomLayor:
             "bool":self.rand_bool,
             "list":self.rand_list,
             "float":self.rand_float,
+            "input":self.rand_input_shape
         }
         
     def rand_setting(self, space):

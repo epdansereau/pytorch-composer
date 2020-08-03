@@ -17,7 +17,7 @@ class Reshape(Layer):
                  dimension_key = "output_size",
                  required_args = ['output_size'],
                  spaces = {
-                    'output_size':"list",
+                    'output_size':'input',
                  }
         )
         
