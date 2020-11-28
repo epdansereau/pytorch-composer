@@ -1,4 +1,4 @@
 # pytorch-composer
-Creates valid Pytorch code from simple descriptors
+Creates valid Pytorch code randomly or from simple descriptors.
 
-More info coming soon
+This project is no longer worked on.
